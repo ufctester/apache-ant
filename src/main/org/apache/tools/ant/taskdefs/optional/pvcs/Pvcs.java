@@ -30,6 +30,7 @@ import java.text.ParseException;
 import java.util.Enumeration;
 import java.util.Random;
 import java.util.Vector;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Execute;
@@ -50,11 +51,11 @@ import org.apache.tools.ant.util.FileUtils;
  * of PVCS (get and pcli) and must have access to the repository. Note that the way to specify
  * the repository is platform dependent so use property to specify location of repository.
  * <br>
- * This version has been tested agains PVCS version 6.5 and 6.6 under Windows and Solaris.
+ * This version has been tested against PVCS version 6.5 and 6.6 under Windows and Solaris.
 
  *
  * <b>19-04-2001</b> <p>The task now has a more robust
- * parser. It allows for platform independant file paths
+ * parser. It allows for platform independent file paths
  * and supports file names with <i>()</i>. Thanks to Erik Husby for
  * bringing the bug to my attention.
  *
@@ -319,7 +320,7 @@ public class Pvcs extends org.apache.tools.ant.Task {
                         if (!dir.exists()) {
                             log("Creating " + dir.getAbsolutePath(),
                                 Project.MSG_VERBOSE);
-                            if (dir.mkdirs()) {
+                            if (dir.mkdirs() || dir.isDirectory()) {
                                 log("Created " + dir.getAbsolutePath(),
                                     Project.MSG_INFO);
                             } else {

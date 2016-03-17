@@ -1,9 +1,27 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
 package org.apache.tools.ant.types.resources;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.apache.tools.ant.types.Resource;
 
 /**
@@ -18,6 +36,7 @@ public class LazyResourceCollectionWrapper extends
 
     private FilteringIterator filteringIterator;
 
+    @Override
     protected Iterator<Resource> createIterator() {
         Iterator<Resource> iterator;
         if (isCache()) {
@@ -33,10 +52,11 @@ public class LazyResourceCollectionWrapper extends
         return iterator;
     }
 
+    @Override
     protected int getSize() {
         // to compute the size, just iterate: the iterator will take care of
         // caching
-        Iterator<Resource> it = createIterator();
+        final Iterator<Resource> it = createIterator();
         int size = 0;
         while (it.hasNext()) {
             it.next();
@@ -48,11 +68,11 @@ public class LazyResourceCollectionWrapper extends
     /**
      * Specify if the resource should be filtered or not. This function should
      * be overrided in order to define the filtering algorithm
-     * 
+     *
      * @param r resource considered for filtration
      * @return whether the resource should be filtered or not
      */
-    protected boolean filterResource(Resource r) {
+    protected boolean filterResource(final Resource r) {
         return false;
     }
 
@@ -64,7 +84,7 @@ public class LazyResourceCollectionWrapper extends
 
         protected final Iterator<Resource> it;
 
-        public FilteringIterator(Iterator<Resource> it) {
+        public FilteringIterator(final Iterator<Resource> it) {
             this.it = it;
         }
 
@@ -89,7 +109,7 @@ public class LazyResourceCollectionWrapper extends
             if (!hasNext()) {
                 throw new UnsupportedOperationException();
             }
-            Resource r = next;
+            final Resource r = next;
             next = null;
             return r;
         }
@@ -111,12 +131,12 @@ public class LazyResourceCollectionWrapper extends
 
         /**
          * Default constructor
-         * 
+         *
          * @param it
          *            the iterator which will provide the resources to put in
          *            cache
          */
-        public CachedIterator(Iterator<Resource> it) {
+        public CachedIterator(final Iterator<Resource> it) {
             this.it = it;
         }
 
@@ -131,7 +151,7 @@ public class LazyResourceCollectionWrapper extends
                     return false;
                 }
                 // put in cache the next resource
-                Resource r = it.next();
+                final Resource r = it.next();
                 cachedResources.add(r);
             }
             return true;

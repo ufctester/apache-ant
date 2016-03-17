@@ -19,6 +19,7 @@
 package org.apache.tools.ant.util;
 
 import java.util.Vector;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.util.regexp.RegexpMatcher;
 import org.apache.tools.ant.util.regexp.RegexpMatcherFactory;
@@ -145,7 +146,7 @@ public class RegexpPatternMapper implements FileNameMapper {
                         result.append(to[i]);
                     }
                 } else {
-                    // XXX - should throw an exception instead?
+                    // TODO - should throw an exception instead?
                     result.append('\\');
                 }
             } else {

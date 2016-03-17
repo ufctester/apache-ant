@@ -17,11 +17,12 @@
  */
 package org.apache.tools.ant.util;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
-import java.io.File;
-import java.util.Map;
-import java.util.HashMap;
 
 
 /**
@@ -85,7 +86,7 @@ public class ScriptFixBSFPath {
      * </ol>
      *
      * Assume a simple model for the loader:
-     *  thisloader<-customloader
+     *  thisloader&lt;-customloader
      *  or
      *  thisloader
      *

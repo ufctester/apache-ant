@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectComponent;
 import org.apache.tools.ant.Task;
-import org.apache.tools.ant.Project;
 
 /**
  * Special <code>PipedInputStream</code> that will not die
@@ -103,7 +103,7 @@ public class LeadPipeInputStream extends PipedInputStream {
 
     /**
      * Set the size of the buffer.
-     * @param size   the new buffer size.  Ignored if <= current size.
+     * @param size   the new buffer size.  Ignored if &lt;= current size.
      */
     public synchronized void setBufferSize(int size) {
         if (size > buffer.length) {

@@ -17,29 +17,30 @@
  */
 package org.apache.tools.ant;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.io.EOFException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.WeakHashMap;
+
+import org.apache.tools.ant.helper.DefaultExecutor;
 import org.apache.tools.ant.input.DefaultInputHandler;
 import org.apache.tools.ant.input.InputHandler;
-import org.apache.tools.ant.helper.DefaultExecutor;
+import org.apache.tools.ant.types.Description;
 import org.apache.tools.ant.types.FilterSet;
 import org.apache.tools.ant.types.FilterSetCollection;
-import org.apache.tools.ant.types.Description;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceFactory;
@@ -90,6 +91,7 @@ public class Project implements ResourceFactory {
      * @deprecated since 1.5.x.
      *             Use {@link JavaEnvUtils#JAVA_1_0} instead.
      */
+    @Deprecated
     public static final String JAVA_1_0 = JavaEnvUtils.JAVA_1_0;
     /**
      * Version constant for Java 1.1 .
@@ -97,6 +99,7 @@ public class Project implements ResourceFactory {
      * @deprecated since 1.5.x.
      *             Use {@link JavaEnvUtils#JAVA_1_1} instead.
      */
+    @Deprecated
     public static final String JAVA_1_1 = JavaEnvUtils.JAVA_1_1;
     /**
      * Version constant for Java 1.2 .
@@ -104,6 +107,7 @@ public class Project implements ResourceFactory {
      * @deprecated since 1.5.x.
      *             Use {@link JavaEnvUtils#JAVA_1_2} instead.
      */
+    @Deprecated
     public static final String JAVA_1_2 = JavaEnvUtils.JAVA_1_2;
     /**
      * Version constant for Java 1.3 .
@@ -111,6 +115,7 @@ public class Project implements ResourceFactory {
      * @deprecated since 1.5.x.
      *             Use {@link JavaEnvUtils#JAVA_1_3} instead.
      */
+    @Deprecated
     public static final String JAVA_1_3 = JavaEnvUtils.JAVA_1_3;
     /**
      * Version constant for Java 1.4 .
@@ -118,6 +123,7 @@ public class Project implements ResourceFactory {
      * @deprecated since 1.5.x.
      *             Use {@link JavaEnvUtils#JAVA_1_4} instead.
      */
+    @Deprecated
     public static final String JAVA_1_4 = JavaEnvUtils.JAVA_1_4;
 
     /** Default filter start token. */
@@ -135,18 +141,19 @@ public class Project implements ResourceFactory {
 
 
     /** Map of references within the project (paths etc) (String to Object). */
-    private Hashtable<String, Object> references = new AntRefTable();
+    private final Hashtable<String, Object> references = new AntRefTable();
 
     /** Map of id references - used for indicating broken build files */
-    private HashMap<String, Object> idReferences = new HashMap<String, Object>();
+    private final HashMap<String, Object> idReferences = new HashMap<String, Object>();
 
     /** Name of the project's default target. */
     private String defaultTarget;
 
     /** Map from target names to targets (String to Target). */
-    private Hashtable<String, Target> targets = new Hashtable<String, Target>();
+    private final Hashtable<String, Target> targets = new Hashtable<String, Target>();
+
     /** Set of global filters. */
-    private FilterSet globalFilterSet = new FilterSet();
+    private final FilterSet globalFilterSet = new FilterSet();
     {
         // Initialize the globalFileSet's project
         globalFilterSet.setProject(this);
@@ -157,7 +164,7 @@ public class Project implements ResourceFactory {
      * contains one FilterSet, but the wrapper is needed in order to
      * make it easier to use the FileUtils interface.
      */
-    private FilterSetCollection globalFilters
+    private final FilterSetCollection globalFilters
         = new FilterSetCollection(globalFilterSet);
 
     /** Project base directory. */
@@ -172,6 +179,7 @@ public class Project implements ResourceFactory {
     /** for each thread, record whether it is currently executing
         messageLogged */
     private final ThreadLocal<Boolean> isLoggingMessage = new ThreadLocal<Boolean>() {
+            @Override
             protected Boolean initialValue() {
                 return Boolean.FALSE;
             }
@@ -211,7 +219,7 @@ public class Project implements ResourceFactory {
      *
      * @param handler the InputHandler instance to use for gathering input.
      */
-    public void setInputHandler(InputHandler handler) {
+    public void setInputHandler(final InputHandler handler) {
         inputHandler = handler;
     }
 
@@ -224,7 +232,7 @@ public class Project implements ResourceFactory {
      *        is requested.
      * @since Ant 1.6
      */
-    public void setDefaultInputStream(InputStream defaultInputStream) {
+    public void setDefaultInputStream(final InputStream defaultInputStream) {
         this.defaultInputStream = defaultInputStream;
     }
 
@@ -265,8 +273,8 @@ public class Project implements ResourceFactory {
     public Project createSubProject() {
         Project subProject = null;
         try {
-            subProject = (Project) (getClass().newInstance());
-        } catch (Exception e) {
+            subProject = (getClass().newInstance());
+        } catch (final Exception e) {
             subProject = new Project();
         }
         initSubProject(subProject);
@@ -277,7 +285,7 @@ public class Project implements ResourceFactory {
      * Initialize a subproject.
      * @param subProject the subproject to initialize.
      */
-    public void initSubProject(Project subProject) {
+    public void initSubProject(final Project subProject) {
         ComponentHelper.getComponentHelper(subProject)
             .initSubProject(ComponentHelper.getComponentHelper(this));
         subProject.setDefaultInputStream(getDefaultInputStream());
@@ -318,7 +326,7 @@ public class Project implements ResourceFactory {
      * to the result
      */
     private void setAntLib() {
-        File antlib = org.apache.tools.ant.launch.Locator.getClassSource(
+        final File antlib = org.apache.tools.ant.launch.Locator.getClassSource(
             Project.class);
         if (antlib != null) {
             setPropertyInternal(MagicNames.ANT_LIB, antlib.getAbsolutePath());
@@ -332,7 +340,7 @@ public class Project implements ResourceFactory {
      *
      * @return an appropriate classloader.
      */
-    public AntClassLoader createClassLoader(Path path) {
+    public AntClassLoader createClassLoader(final Path path) {
         return AntClassLoader
             .newAntClassLoader(getClass().getClassLoader(), this, path, true);
     }
@@ -347,7 +355,7 @@ public class Project implements ResourceFactory {
      * @return an appropriate classloader.
      */
     public AntClassLoader createClassLoader(
-        ClassLoader parent, Path path) {
+        final ClassLoader parent, final Path path) {
         return AntClassLoader.newAntClassLoader(parent, this, path, true);
     }
 
@@ -358,7 +366,7 @@ public class Project implements ResourceFactory {
      * @param coreLoader The classloader to use for the project.
      *                   May be <code>null</code>.
      */
-    public void setCoreLoader(ClassLoader coreLoader) {
+    public void setCoreLoader(final ClassLoader coreLoader) {
         this.coreLoader = coreLoader;
     }
 
@@ -381,7 +389,7 @@ public class Project implements ResourceFactory {
      * @param listener The listener to add to the list.
      *                 Must not be <code>null</code>.
      */
-    public void addBuildListener(BuildListener listener) {
+    public void addBuildListener(final BuildListener listener) {
         synchronized (listenersLock) {
             // If the listeners already has this listener, do nothing
             for (int i = 0; i < listeners.length; i++) {
@@ -390,7 +398,7 @@ public class Project implements ResourceFactory {
                 }
             }
             // copy on write semantics
-            BuildListener[] newListeners =
+            final BuildListener[] newListeners =
                 new BuildListener[listeners.length + 1];
             System.arraycopy(listeners, 0, newListeners, 0, listeners.length);
             newListeners[listeners.length] = listener;
@@ -405,12 +413,12 @@ public class Project implements ResourceFactory {
      * @param listener The listener to remove from the list.
      *                 Should not be <code>null</code>.
      */
-    public void removeBuildListener(BuildListener listener) {
+    public void removeBuildListener(final BuildListener listener) {
         synchronized (listenersLock) {
             // copy on write semantics
             for (int i = 0; i < listeners.length; i++) {
                 if (listeners[i] == listener) {
-                    BuildListener[] newListeners =
+                    final BuildListener[] newListeners =
                         new BuildListener[listeners.length - 1];
                     System.arraycopy(listeners, 0, newListeners, 0, i);
                     System.arraycopy(listeners, i + 1, newListeners, i,
@@ -429,7 +437,7 @@ public class Project implements ResourceFactory {
      */
     public Vector<BuildListener> getBuildListeners() {
         synchronized (listenersLock) {
-            Vector<BuildListener> r = new Vector<BuildListener>(listeners.length);
+            final Vector<BuildListener> r = new Vector<BuildListener>(listeners.length);
             for (int i = 0; i < listeners.length; i++) {
                 r.add(listeners[i]);
             }
@@ -443,7 +451,7 @@ public class Project implements ResourceFactory {
      * @param message The text to log. Should not be <code>null</code>.
      */
 
-    public void log(String message) {
+    public void log(final String message) {
         log(message, MSG_INFO);
     }
 
@@ -452,7 +460,7 @@ public class Project implements ResourceFactory {
      * @param message The text to log. Should not be <code>null</code>.
      * @param msgLevel The log priority level to use.
      */
-    public void log(String message, int msgLevel) {
+    public void log(final String message, final int msgLevel) {
         log(message, null, msgLevel);
     }
 
@@ -463,7 +471,7 @@ public class Project implements ResourceFactory {
      * @param msgLevel The log priority level to use.
      * @since 1.7
      */
-    public void log(String message, Throwable throwable, int msgLevel) {
+    public void log(final String message, final Throwable throwable, final int msgLevel) {
         fireMessageLogged(this, message, throwable, msgLevel);
     }
 
@@ -473,7 +481,7 @@ public class Project implements ResourceFactory {
      * @param message The text to log. Should not be <code>null</code>.
      * @param msgLevel The log priority level to use.
      */
-    public void log(Task task, String message, int msgLevel) {
+    public void log(final Task task, final String message, final int msgLevel) {
         fireMessageLogged(task, message, null, msgLevel);
     }
 
@@ -485,7 +493,7 @@ public class Project implements ResourceFactory {
      * @param msgLevel The log priority level to use.
      * @since 1.7
      */
-    public void log(Task task, String message, Throwable throwable, int msgLevel) {
+    public void log(final Task task, final String message, final Throwable throwable, final int msgLevel) {
         fireMessageLogged(task, message, throwable, msgLevel);
     }
 
@@ -496,7 +504,7 @@ public class Project implements ResourceFactory {
      * @param message The text to log. Should not be <code>null</code>.
      * @param msgLevel The log priority level to use.
      */
-    public void log(Target target, String message, int msgLevel) {
+    public void log(final Target target, final String message, final int msgLevel) {
         log(target, message, null, msgLevel);
     }
 
@@ -509,8 +517,8 @@ public class Project implements ResourceFactory {
      * @param msgLevel The log priority level to use.
      * @since 1.7
      */
-    public void log(Target target, String message, Throwable throwable,
-            int msgLevel) {
+    public void log(final Target target, final String message, final Throwable throwable,
+            final int msgLevel) {
         fireMessageLogged(target, message, throwable, msgLevel);
     }
 
@@ -531,7 +539,7 @@ public class Project implements ResourceFactory {
      * @param value The new value of the property.
      *              Must not be <code>null</code>.
      */
-    public void setProperty(String name, String value) {
+    public void setProperty(final String name, final String value) {
         PropertyHelper.getPropertyHelper(this).setProperty(name, value, true);
     }
 
@@ -546,7 +554,7 @@ public class Project implements ResourceFactory {
      *              Must not be <code>null</code>.
      * @since 1.5
      */
-    public void setNewProperty(String name, String value) {
+    public void setNewProperty(final String name, final String value) {
         PropertyHelper.getPropertyHelper(this).setNewProperty(name, value);
     }
 
@@ -559,7 +567,7 @@ public class Project implements ResourceFactory {
      *              Must not be <code>null</code>.
      * @see #setProperty(String,String)
      */
-    public void setUserProperty(String name, String value) {
+    public void setUserProperty(final String name, final String value) {
         PropertyHelper.getPropertyHelper(this).setUserProperty(name, value);
     }
 
@@ -575,7 +583,7 @@ public class Project implements ResourceFactory {
      *              Must not be <code>null</code>.
      * @see #setProperty(String,String)
      */
-    public void setInheritedProperty(String name, String value) {
+    public void setInheritedProperty(final String name, final String value) {
         PropertyHelper.getPropertyHelper(this).setInheritedProperty(name, value);
     }
 
@@ -587,7 +595,7 @@ public class Project implements ResourceFactory {
      *             Must not be <code>null</code>.
      * @param value The property value. Must not be <code>null</code>.
      */
-    private void setPropertyInternal(String name, String value) {
+    private void setPropertyInternal(final String name, final String value) {
         PropertyHelper.getPropertyHelper(this).setProperty(name, value, false);
     }
 
@@ -600,8 +608,8 @@ public class Project implements ResourceFactory {
      * @return the property value, or <code>null</code> for no match
      *         or if a <code>null</code> name is provided.
      */
-    public String getProperty(String propertyName) {
-        Object value = PropertyHelper.getPropertyHelper(this).getProperty(propertyName);
+    public String getProperty(final String propertyName) {
+        final Object value = PropertyHelper.getPropertyHelper(this).getProperty(propertyName);
         return value == null ? null : String.valueOf(value);
     }
 
@@ -619,7 +627,7 @@ public class Project implements ResourceFactory {
      * @exception BuildException if the given value has an unclosed
      *                           property name, e.g. <code>${xxx</code>.
      */
-    public String replaceProperties(String value) throws BuildException {
+    public String replaceProperties(final String value) throws BuildException {
         return PropertyHelper.getPropertyHelper(this).replaceProperties(null, value, null);
     }
 
@@ -632,7 +640,7 @@ public class Project implements ResourceFactory {
      * @return the property value, or <code>null</code> for no match
      *         or if a <code>null</code> name is provided.
      */
-     public String getUserProperty(String propertyName) {
+     public String getUserProperty(final String propertyName) {
         return (String) PropertyHelper.getPropertyHelper(this).getUserProperty(propertyName);
     }
 
@@ -674,7 +682,7 @@ public class Project implements ResourceFactory {
      *
      * @since Ant 1.5
      */
-    public void copyUserProperties(Project other) {
+    public void copyUserProperties(final Project other) {
         PropertyHelper.getPropertyHelper(this).copyUserProperties(other);
     }
 
@@ -690,7 +698,7 @@ public class Project implements ResourceFactory {
      *
      * @since Ant 1.5
      */
-    public void copyInheritedProperties(Project other) {
+    public void copyInheritedProperties(final Project other) {
         PropertyHelper.getPropertyHelper(this).copyInheritedProperties(other);
     }
 
@@ -705,7 +713,8 @@ public class Project implements ResourceFactory {
      *             Use setDefault.
      * @see #setDefault(String)
      */
-    public void setDefaultTarget(String defaultTarget) {
+    @Deprecated
+    public void setDefaultTarget(final String defaultTarget) {
         setDefault(defaultTarget);
     }
 
@@ -725,7 +734,7 @@ public class Project implements ResourceFactory {
      *                      May be <code>null</code>, indicating that there is
      *                      no default target.
      */
-    public void setDefault(String defaultTarget) {
+    public void setDefault(final String defaultTarget) {
         if (defaultTarget != null) {
             setUserProperty(MagicNames.PROJECT_DEFAULT_TARGET, defaultTarget);
         }
@@ -739,7 +748,7 @@ public class Project implements ResourceFactory {
      * @param name The name of the project.
      *             Must not be <code>null</code>.
      */
-    public void setName(String name) {
+    public void setName(final String name) {
         setUserProperty(MagicNames.PROJECT_NAME,  name);
         this.name = name;
     }
@@ -759,7 +768,7 @@ public class Project implements ResourceFactory {
      * @param description The description of the project.
      *                    May be <code>null</code>.
      */
-    public void setDescription(String description) {
+    public void setDescription(final String description) {
         this.description = description;
     }
 
@@ -789,7 +798,8 @@ public class Project implements ResourceFactory {
      * @see #getGlobalFilterSet()
      * @see FilterSet#addFilter(String,String)
      */
-    public void addFilter(String token, String value) {
+    @Deprecated
+    public void addFilter(final String token, final String value) {
         if (token == null) {
             return;
         }
@@ -808,6 +818,7 @@ public class Project implements ResourceFactory {
      * @see #getGlobalFilterSet()
      * @see FilterSet#getFilterHash()
      */
+    @Deprecated
     public Hashtable<String, String> getFilters() {
         // we need to build the hashtable dynamically
         return globalFilterSet.getFilterHash();
@@ -822,7 +833,7 @@ public class Project implements ResourceFactory {
      *
      * @exception BuildException if the directory if invalid.
      */
-    public void setBasedir(String baseD) throws BuildException {
+    public void setBasedir(final String baseD) throws BuildException {
         setBaseDir(new File(baseD));
     }
 
@@ -847,7 +858,7 @@ public class Project implements ResourceFactory {
         }
         this.baseDir = baseDir;
         setPropertyInternal(MagicNames.PROJECT_BASEDIR, this.baseDir.getPath());
-        String msg = "Project base dir set to: " + this.baseDir;
+        final String msg = "Project base dir set to: " + this.baseDir;
         log(msg, MSG_VERBOSE);
     }
 
@@ -861,7 +872,7 @@ public class Project implements ResourceFactory {
         if (baseDir == null) {
             try {
                 setBasedir(".");
-            } catch (BuildException ex) {
+            } catch (final BuildException ex) {
                 ex.printStackTrace();
             }
         }
@@ -877,7 +888,7 @@ public class Project implements ResourceFactory {
      * @param keepGoingMode &quot;keep-going&quot; mode
      * @since Ant 1.6
      */
-    public void setKeepGoingMode(boolean keepGoingMode) {
+    public void setKeepGoingMode(final boolean keepGoingMode) {
         this.keepGoingMode = keepGoingMode;
     }
 
@@ -899,6 +910,7 @@ public class Project implements ResourceFactory {
      * @deprecated since 1.5.x.
      *             Use org.apache.tools.ant.util.JavaEnvUtils instead.
      */
+    @Deprecated
     public static String getJavaVersion() {
         return JavaEnvUtils.getJavaVersion();
     }
@@ -914,12 +926,12 @@ public class Project implements ResourceFactory {
      * @see org.apache.tools.ant.util.JavaEnvUtils#getJavaVersion
      */
     public void setJavaVersionProperty() throws BuildException {
-        String javaVersion = JavaEnvUtils.getJavaVersion();
+        final String javaVersion = JavaEnvUtils.getJavaVersion();
         setPropertyInternal(MagicNames.ANT_JAVA_VERSION, javaVersion);
 
         // sanity check
-        if (!JavaEnvUtils.isAtLeastJavaVersion(JavaEnvUtils.JAVA_1_4))  {
-            throw new BuildException("Ant cannot work on Java prior to 1.4");
+        if (!JavaEnvUtils.isAtLeastJavaVersion(JavaEnvUtils.JAVA_1_5))  {
+            throw new BuildException("Ant cannot work on Java prior to 1.5");
         }
         log("Detected Java version: " + javaVersion + " in: "
             + System.getProperty("java.home"), MSG_VERBOSE);
@@ -932,11 +944,11 @@ public class Project implements ResourceFactory {
      * user properties to the project properties.
      */
     public void setSystemProperties() {
-        Properties systemP = System.getProperties();
-        Enumeration<?> e = systemP.propertyNames();
+        final Properties systemP = System.getProperties();
+        final Enumeration<?> e = systemP.propertyNames();
         while (e.hasMoreElements()) {
-            String propertyName = (String) e.nextElement();
-            String value = systemP.getProperty(propertyName);
+            final String propertyName = (String) e.nextElement();
+            final String value = systemP.getProperty(propertyName);
             if (value != null) {
                 this.setPropertyInternal(propertyName, value);
             }
@@ -963,7 +975,7 @@ public class Project implements ResourceFactory {
      *
      * @see #checkTaskClass(Class)
      */
-    public void addTaskDefinition(String taskName, Class<?> taskClass)
+    public void addTaskDefinition(final String taskName, final Class<?> taskClass)
          throws BuildException {
         ComponentHelper.getComponentHelper(this).addTaskDefinition(taskName,
                 taskClass);
@@ -998,13 +1010,13 @@ public class Project implements ResourceFactory {
             taskClass.getConstructor();
             // don't have to check for public, since
             // getConstructor finds public constructors only.
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             final String message = "No public no-arg constructor in "
                 + taskClass;
             log(message, Project.MSG_ERR);
             throw new BuildException(message);
-        } catch (LinkageError e) {
-            String message = "Could not load " + taskClass + ": " + e;
+        } catch (final LinkageError e) {
+            final String message = "Could not load " + taskClass + ": " + e;
             log(message, Project.MSG_ERR);
             throw new BuildException(message, e);
         }
@@ -1050,7 +1062,7 @@ public class Project implements ResourceFactory {
      * @param typeClass The full name of the class implementing the datatype.
      *                  Must not be <code>null</code>.
      */
-    public void addDataTypeDefinition(String typeName, Class<?> typeClass) {
+    public void addDataTypeDefinition(final String typeName, final Class<?> typeClass) {
         ComponentHelper.getComponentHelper(this).addDataTypeDefinition(typeName,
                 typeClass);
     }
@@ -1089,7 +1101,7 @@ public class Project implements ResourceFactory {
      *
      * @see Project#addOrReplaceTarget(Target)
      */
-    public void addTarget(Target target) throws BuildException {
+    public void addTarget(final Target target) throws BuildException {
         addTarget(target.getName(), target);
     }
 
@@ -1105,7 +1117,7 @@ public class Project implements ResourceFactory {
      *
      * @see Project#addOrReplaceTarget(String, Target)
      */
-     public void addTarget(String targetName, Target target)
+     public void addTarget(final String targetName, final Target target)
          throws BuildException {
          if (targets.get(targetName) != null) {
              throw new BuildException("Duplicate target: `" + targetName + "'");
@@ -1120,7 +1132,7 @@ public class Project implements ResourceFactory {
      * @param target The target to be added or replaced in the project.
      *               Must not be <code>null</code>.
      */
-    public void addOrReplaceTarget(Target target) {
+    public void addOrReplaceTarget(final Target target) {
         addOrReplaceTarget(target.getName(), target);
     }
 
@@ -1133,8 +1145,8 @@ public class Project implements ResourceFactory {
      * @param target The target to be added or replaced in the project.
      *               Must not be <code>null</code>.
      */
-    public void addOrReplaceTarget(String targetName, Target target) {
-        String msg = " +Target: " + targetName;
+    public void addOrReplaceTarget(final String targetName, final Target target) {
+        final String msg = " +Target: " + targetName;
         log(msg, MSG_DEBUG);
         target.setProject(this);
         targets.put(targetName, target);
@@ -1172,7 +1184,7 @@ public class Project implements ResourceFactory {
      * @exception BuildException if the task name is recognised but task
      *                           creation fails.
      */
-    public Task createTask(String taskType) throws BuildException {
+    public Task createTask(final String taskType) throws BuildException {
         return ComponentHelper.getComponentHelper(this).createTask(taskType);
     }
 
@@ -1188,7 +1200,7 @@ public class Project implements ResourceFactory {
      * @exception BuildException if the data type name is recognised but
      *                           instance creation fails.
      */
-    public Object createDataType(String typeName) throws BuildException {
+    public Object createDataType(final String typeName) throws BuildException {
         return ComponentHelper.getComponentHelper(this).createDataType(typeName);
     }
 
@@ -1196,7 +1208,7 @@ public class Project implements ResourceFactory {
      * Set the Executor instance for this Project.
      * @param e the Executor to use.
      */
-    public void setExecutor(Executor e) {
+    public void setExecutor(final Executor e) {
         addReference(MagicNames.ANT_EXECUTOR_REFERENCE, e);
     }
 
@@ -1214,14 +1226,14 @@ public class Project implements ResourceFactory {
             log("Attempting to create object of type " + classname, MSG_DEBUG);
             try {
                 o = Class.forName(classname, true, coreLoader).newInstance();
-            } catch (ClassNotFoundException seaEnEfEx) {
+            } catch (final ClassNotFoundException seaEnEfEx) {
                 //try the current classloader
                 try {
                     o = Class.forName(classname).newInstance();
-                } catch (Exception ex) {
+                } catch (final Exception ex) {
                     log(ex.toString(), MSG_ERR);
                 }
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 log(ex.toString(), MSG_ERR);
             }
             if (o == null) {
@@ -1242,7 +1254,7 @@ public class Project implements ResourceFactory {
      *
      * @exception BuildException if the build failed.
      */
-    public void executeTargets(Vector<String> names) throws BuildException {
+    public void executeTargets(final Vector<String> names) throws BuildException {
         setUserProperty(MagicNames.PROJECT_INVOKED_TARGETS,
                         CollectionUtils.flattenToString(names));
         getExecutor().executeTargets(this, names.toArray(new String[names.size()]));
@@ -1257,8 +1269,8 @@ public class Project implements ResourceFactory {
      * @param isWarning Whether the text represents an warning (<code>true</code>)
      *        or information (<code>false</code>).
      */
-    public void demuxOutput(String output, boolean isWarning) {
-        Task task = getThreadTask(Thread.currentThread());
+    public void demuxOutput(final String output, final boolean isWarning) {
+        final Task task = getThreadTask(Thread.currentThread());
         if (task == null) {
             log(output, isWarning ? MSG_WARN : MSG_INFO);
         } else {
@@ -1283,7 +1295,7 @@ public class Project implements ResourceFactory {
      * @exception IOException if the data cannot be read.
      * @since Ant 1.6
      */
-    public int defaultInput(byte[] buffer, int offset, int length)
+    public int defaultInput(final byte[] buffer, final int offset, final int length)
         throws IOException {
         if (defaultInputStream != null) {
             System.out.flush();
@@ -1305,9 +1317,9 @@ public class Project implements ResourceFactory {
      * @exception IOException if the data cannot be read.
      * @since Ant 1.6
      */
-    public int demuxInput(byte[] buffer, int offset, int length)
+    public int demuxInput(final byte[] buffer, final int offset, final int length)
         throws IOException {
-        Task task = getThreadTask(Thread.currentThread());
+        final Task task = getThreadTask(Thread.currentThread());
         if (task == null) {
             return defaultInput(buffer, offset, length);
         } else {
@@ -1326,8 +1338,8 @@ public class Project implements ResourceFactory {
      * @param isError Whether the text represents an error (<code>true</code>)
      *        or information (<code>false</code>).
      */
-    public void demuxFlush(String output, boolean isError) {
-        Task task = getThreadTask(Thread.currentThread());
+    public void demuxFlush(final String output, final boolean isError) {
+        final Task task = getThreadTask(Thread.currentThread());
         if (task == null) {
             fireMessageLogged(this, output, isError ? MSG_ERR : MSG_INFO);
         } else {
@@ -1347,13 +1359,13 @@ public class Project implements ResourceFactory {
      *
      * @exception BuildException if the build failed.
      */
-    public void executeTarget(String targetName) throws BuildException {
+    public void executeTarget(final String targetName) throws BuildException {
 
         // sanity check ourselves, if we've been asked to build nothing
         // then we should complain
 
         if (targetName == null) {
-            String msg = "No target specified";
+            final String msg = "No target specified";
             throw new BuildException(msg);
         }
 
@@ -1369,15 +1381,15 @@ public class Project implements ResourceFactory {
      * @param sortedTargets   the aforementioned <code>Vector</code>.
      * @throws BuildException on error.
      */
-    public void executeSortedTargets(Vector<Target> sortedTargets)
+    public void executeSortedTargets(final Vector<Target> sortedTargets)
         throws BuildException {
-        Set<String> succeededTargets = new HashSet<String>();
+        final Set<String> succeededTargets = new HashSet<String>();
         BuildException buildException = null; // first build exception
-        for (Target curtarget : sortedTargets) {
+        for (final Target curtarget : sortedTargets) {
             boolean canExecute = true;
-            for (Enumeration<String> depIter = curtarget.getDependencies();
+            for (final Enumeration<String> depIter = curtarget.getDependencies();
                  depIter.hasMoreElements();) {
-                String dependencyName = depIter.nextElement();
+                final String dependencyName = depIter.nextElement();
                 if (!succeededTargets.contains(dependencyName)) {
                     canExecute = false;
                     log(curtarget,
@@ -1392,12 +1404,12 @@ public class Project implements ResourceFactory {
                 try {
                     curtarget.performTasks();
                     succeededTargets.add(curtarget.getName());
-                } catch (RuntimeException ex) {
+                } catch (final RuntimeException ex) {
                     if (!(keepGoingMode)) {
                         throw ex; // throw further
                     }
                     thrownException = ex;
-                } catch (Throwable ex) {
+                } catch (final Throwable ex) {
                     if (!(keepGoingMode)) {
                         throw new BuildException(ex);
                     }
@@ -1449,7 +1461,8 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public File resolveFile(String fileName, File rootDir) {
+    @Deprecated
+    public File resolveFile(final String fileName, final File rootDir) {
         return FILE_UTILS.resolveFile(rootDir, fileName);
     }
 
@@ -1465,7 +1478,7 @@ public class Project implements ResourceFactory {
      * @return the resolved File.
      *
      */
-    public File resolveFile(String fileName) {
+    public File resolveFile(final String fileName) {
         return FILE_UTILS.resolveFile(baseDir, fileName);
     }
 
@@ -1488,7 +1501,8 @@ public class Project implements ResourceFactory {
      *
      * @see PathTokenizer
      */
-    public static String translatePath(String toProcess) {
+    @Deprecated
+    public static String translatePath(final String toProcess) {
         return FileUtils.translatePath(toProcess);
     }
 
@@ -1505,7 +1519,8 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(String sourceFile, String destFile)
+    @Deprecated
+    public void copyFile(final String sourceFile, final String destFile)
           throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile);
     }
@@ -1525,7 +1540,8 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(String sourceFile, String destFile, boolean filtering)
+    @Deprecated
+    public void copyFile(final String sourceFile, final String destFile, final boolean filtering)
         throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile,
             filtering ? globalFilters : null);
@@ -1549,8 +1565,9 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(String sourceFile, String destFile, boolean filtering,
-                         boolean overwrite) throws IOException {
+    @Deprecated
+    public void copyFile(final String sourceFile, final String destFile, final boolean filtering,
+                         final boolean overwrite) throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile,
             filtering ? globalFilters : null, overwrite);
     }
@@ -1578,8 +1595,9 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(String sourceFile, String destFile, boolean filtering,
-                         boolean overwrite, boolean preserveLastModified)
+    @Deprecated
+    public void copyFile(final String sourceFile, final String destFile, final boolean filtering,
+                         final boolean overwrite, final boolean preserveLastModified)
         throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile,
             filtering ? globalFilters : null, overwrite, preserveLastModified);
@@ -1598,7 +1616,8 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(File sourceFile, File destFile) throws IOException {
+    @Deprecated
+    public void copyFile(final File sourceFile, final File destFile) throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile);
     }
 
@@ -1617,7 +1636,8 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(File sourceFile, File destFile, boolean filtering)
+    @Deprecated
+    public void copyFile(final File sourceFile, final File destFile, final boolean filtering)
         throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile,
             filtering ? globalFilters : null);
@@ -1641,8 +1661,9 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(File sourceFile, File destFile, boolean filtering,
-                         boolean overwrite) throws IOException {
+    @Deprecated
+    public void copyFile(final File sourceFile, final File destFile, final boolean filtering,
+                         final boolean overwrite) throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile,
             filtering ? globalFilters : null, overwrite);
     }
@@ -1670,8 +1691,9 @@ public class Project implements ResourceFactory {
      *
      * @deprecated since 1.4.x
      */
-    public void copyFile(File sourceFile, File destFile, boolean filtering,
-                         boolean overwrite, boolean preserveLastModified)
+    @Deprecated
+    public void copyFile(final File sourceFile, final File destFile, final boolean filtering,
+                         final boolean overwrite, final boolean preserveLastModified)
         throws IOException {
         FILE_UTILS.copyFile(sourceFile, destFile,
             filtering ? globalFilters : null, overwrite, preserveLastModified);
@@ -1692,7 +1714,8 @@ public class Project implements ResourceFactory {
      *                           despite running on a platform with a version
      *                           above 1.1.
      */
-    public void setFileLastModified(File file, long time)
+    @Deprecated
+    public void setFileLastModified(final File file, final long time)
          throws BuildException {
         FILE_UTILS.setFileLastModified(file, time);
         log("Setting modification time for " + file, MSG_VERBOSE);
@@ -1709,7 +1732,7 @@ public class Project implements ResourceFactory {
      *         <code>"true"</code> or <code>"yes"</code>, or
      *         <code>false</code> otherwise.
      */
-    public static boolean toBoolean(String s) {
+    public static boolean toBoolean(final String s) {
         return ("on".equalsIgnoreCase(s)
                 || "true".equalsIgnoreCase(s)
                 || "yes".equalsIgnoreCase(s));
@@ -1721,16 +1744,16 @@ public class Project implements ResourceFactory {
      * @return Project instance, if any.
      * @since Ant 1.7.1
      */
-    public static Project getProject(Object o) {
+    public static Project getProject(final Object o) {
         if (o instanceof ProjectComponent) {
             return ((ProjectComponent) o).getProject();
         }
         try {
-            Method m = o.getClass().getMethod("getProject", (Class[]) null);
+            final Method m = o.getClass().getMethod("getProject", (Class[]) null);
             if (Project.class == m.getReturnType()) {
                 return (Project) m.invoke(o, (Object[]) null);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             //too bad
         }
         return null;
@@ -1750,7 +1773,7 @@ public class Project implements ResourceFactory {
      * @exception BuildException if there is a cyclic dependency among the
      *                           targets, or if a named target does not exist.
      */
-    public final Vector<Target> topoSort(String root, Hashtable<String, Target> targetTable)
+    public final Vector<Target> topoSort(final String root, final Hashtable<String, Target> targetTable)
         throws BuildException {
         return topoSort(new String[] {root}, targetTable, true);
     }
@@ -1772,8 +1795,8 @@ public class Project implements ResourceFactory {
      *                           targets, or if a named target does not exist.
      * @since Ant 1.6.3
      */
-    public final Vector<Target> topoSort(String root, Hashtable<String, Target> targetTable,
-                                 boolean returnAll) throws BuildException {
+    public final Vector<Target> topoSort(final String root, final Hashtable<String, Target> targetTable,
+                                 final boolean returnAll) throws BuildException {
         return topoSort(new String[] {root}, targetTable, returnAll);
     }
 
@@ -1794,11 +1817,11 @@ public class Project implements ResourceFactory {
      *                           targets, or if a named target does not exist.
      * @since Ant 1.6.3
      */
-    public final Vector<Target> topoSort(String[] root, Hashtable<String, Target> targetTable,
-                                 boolean returnAll) throws BuildException {
-        Vector<Target> ret = new VectorSet<Target>();
-        Hashtable<String, String> state = new Hashtable<String, String>();
-        Stack<String> visiting = new Stack<String>();
+    public final Vector<Target> topoSort(final String[] root, final Hashtable<String, Target> targetTable,
+                                 final boolean returnAll) throws BuildException {
+        final Vector<Target> ret = new VectorSet<Target>();
+        final Hashtable<String, String> state = new Hashtable<String, String>();
+        final Stack<String> visiting = new Stack<String>();
 
         // We first run a DFS based sort using each root as a starting node.
         // This creates the minimum sequence of Targets to the root node(s).
@@ -1809,7 +1832,7 @@ public class Project implements ResourceFactory {
         // build Target.
 
         for (int i = 0; i < root.length; i++) {
-            String st = (String) (state.get(root[i]));
+            final String st = (state.get(root[i]));
             if (st == null) {
                 tsort(root[i], targetTable, state, visiting, ret);
             } else if (st == VISITING) {
@@ -1817,7 +1840,7 @@ public class Project implements ResourceFactory {
                     + root[i]);
             }
         }
-        StringBuffer buf = new StringBuffer("Build sequence for target(s)");
+        final StringBuffer buf = new StringBuffer("Build sequence for target(s)");
 
         for (int j = 0; j < root.length; j++) {
             buf.append((j == 0) ? " `" : ", `").append(root[j]).append('\'');
@@ -1825,10 +1848,10 @@ public class Project implements ResourceFactory {
         buf.append(" is " + ret);
         log(buf.toString(), MSG_VERBOSE);
 
-        Vector<Target> complete = (returnAll) ? ret : new Vector<Target>(ret);
-        for (Enumeration<String> en = targetTable.keys(); en.hasMoreElements();) {
-            String curTarget = en.nextElement();
-            String st = state.get(curTarget);
+        final Vector<Target> complete = (returnAll) ? ret : new Vector<Target>(ret);
+        for (final Enumeration<String> en = targetTable.keys(); en.hasMoreElements();) {
+            final String curTarget = en.nextElement();
+            final String st = state.get(curTarget);
             if (st == null) {
                 tsort(curTarget, targetTable, state, visiting, complete);
             } else if (st == VISITING) {
@@ -1880,34 +1903,34 @@ public class Project implements ResourceFactory {
      * @exception BuildException if a non-existent target is specified or if
      *                           a circular dependency is detected.
      */
-    private void tsort(String root, Hashtable<String, Target> targetTable,
-                             Hashtable<String, String> state, Stack<String> visiting,
-                             Vector<Target> ret)
+    private void tsort(final String root, final Hashtable<String, Target> targetTable,
+                             final Hashtable<String, String> state, final Stack<String> visiting,
+                             final Vector<Target> ret)
         throws BuildException {
         state.put(root, VISITING);
         visiting.push(root);
 
-        Target target = targetTable.get(root);
+        final Target target = targetTable.get(root);
 
         // Make sure we exist
         if (target == null) {
-            StringBuilder sb = new StringBuilder("Target \"");
+            final StringBuilder sb = new StringBuilder("Target \"");
             sb.append(root);
             sb.append("\" does not exist in the project \"");
             sb.append(name);
             sb.append("\". ");
             visiting.pop();
             if (!visiting.empty()) {
-                String parent = visiting.peek();
+                final String parent = visiting.peek();
                 sb.append("It is used from target \"");
                 sb.append(parent);
                 sb.append("\".");
             }
             throw new BuildException(new String(sb));
         }
-        for (Enumeration<String> en = target.getDependencies(); en.hasMoreElements();) {
-            String cur = en.nextElement();
-            String m = state.get(cur);
+        for (final Enumeration<String> en = target.getDependencies(); en.hasMoreElements();) {
+            final String cur = en.nextElement();
+            final String m = state.get(cur);
             if (m == null) {
                 // Not been visited
                 tsort(cur, targetTable, state, visiting, ret);
@@ -1916,7 +1939,7 @@ public class Project implements ResourceFactory {
                 throw makeCircularException(cur, visiting);
             }
         }
-        String p = visiting.pop();
+        final String p = visiting.pop();
         if (root != p) {
             throw new RuntimeException("Unexpected internal error: expected to "
                 + "pop " + root + " but got " + p);
@@ -1934,7 +1957,7 @@ public class Project implements ResourceFactory {
      *
      * @return a BuildException detailing the specified circular dependency.
      */
-    private static BuildException makeCircularException(String end, Stack<String> stk) {
+    private static BuildException makeCircularException(final String end, final Stack<String> stk) {
         final StringBuilder sb = new StringBuilder("Circular dependency: ");
         sb.append(end);
         String c;
@@ -1950,7 +1973,7 @@ public class Project implements ResourceFactory {
      * Inherit the id references.
      * @param parent the parent project of this project.
      */
-    public void inheritIDReferences(Project parent) {
+    public void inheritIDReferences(final Project parent) {
     }
 
     /**
@@ -1959,7 +1982,7 @@ public class Project implements ResourceFactory {
      * @param id the id to set.
      * @param value the value to set it to (Unknown element in this case.
      */
-    public void addIdReference(String id, Object value) {
+    public void addIdReference(final String id, final Object value) {
         idReferences.put(id, value);
     }
 
@@ -1969,8 +1992,8 @@ public class Project implements ResourceFactory {
      * @param referenceName The name of the reference. Must not be <code>null</code>.
      * @param value The value of the reference.
      */
-    public void addReference(String referenceName, Object value) {
-        Object old = ((AntRefTable) references).getReal(referenceName);
+    public void addReference(final String referenceName, final Object value) {
+        final Object old = ((AntRefTable) references).getReal(referenceName);
         if (old == value) {
             // no warning, this is not changing anything
             return;
@@ -1998,7 +2021,7 @@ public class Project implements ResourceFactory {
      *
      * @since Ant 1.8.0
      */
-    public boolean hasReference(String key) {
+    public boolean hasReference(final String key) {
         return references.containsKey(key);
     }
 
@@ -2024,7 +2047,7 @@ public class Project implements ResourceFactory {
      * @return the reference with the specified ID, or <code>null</code> if
      *         there is no such reference in the project, with type inference.
      */
-    public <T> T getReference(String key) {
+    public <T> T getReference(final String key) {
         @SuppressWarnings("unchecked")
         final T ret = (T) references.get(key);
         if (ret != null) {
@@ -2036,7 +2059,7 @@ public class Project implements ResourceFactory {
                     log("Unresolvable reference " + key
                             + " might be a misuse of property expansion syntax.", MSG_WARN);
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 //ignore
             }
         }
@@ -2056,7 +2079,7 @@ public class Project implements ResourceFactory {
      *
      * @since 1.95, Ant 1.5
      */
-    public String getElementName(Object element) {
+    public String getElementName(final Object element) {
         return ComponentHelper.getComponentHelper(this).getElementName(element);
     }
 
@@ -2065,8 +2088,8 @@ public class Project implements ResourceFactory {
      * to the build listeners for this project.
      */
     public void fireBuildStarted() {
-        BuildEvent event = new BuildEvent(this);
-        BuildListener[] currListeners = listeners;
+        final BuildEvent event = new BuildEvent(this);
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             currListeners[i].buildStarted(event);
         }
@@ -2079,10 +2102,10 @@ public class Project implements ResourceFactory {
      *                  failure. May be <code>null</code>, indicating
      *                  a successful build.
      */
-    public void fireBuildFinished(Throwable exception) {
-        BuildEvent event = new BuildEvent(this);
+    public void fireBuildFinished(final Throwable exception) {
+        final BuildEvent event = new BuildEvent(this);
         event.setException(exception);
-        BuildListener[] currListeners = listeners;
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             currListeners[i].buildFinished(event);
         }
@@ -2097,8 +2120,8 @@ public class Project implements ResourceFactory {
      * @since Ant 1.6.2
      */
     public void fireSubBuildStarted() {
-        BuildEvent event = new BuildEvent(this);
-        BuildListener[] currListeners = listeners;
+        final BuildEvent event = new BuildEvent(this);
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             if (currListeners[i] instanceof SubBuildListener) {
                 ((SubBuildListener) currListeners[i]).subBuildStarted(event);
@@ -2115,10 +2138,10 @@ public class Project implements ResourceFactory {
      *
      * @since Ant 1.6.2
      */
-    public void fireSubBuildFinished(Throwable exception) {
-        BuildEvent event = new BuildEvent(this);
+    public void fireSubBuildFinished(final Throwable exception) {
+        final BuildEvent event = new BuildEvent(this);
         event.setException(exception);
-        BuildListener[] currListeners = listeners;
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             if (currListeners[i] instanceof SubBuildListener) {
                 ((SubBuildListener) currListeners[i]).subBuildFinished(event);
@@ -2133,9 +2156,9 @@ public class Project implements ResourceFactory {
      * @param target The target which is starting to build.
      *               Must not be <code>null</code>.
      */
-    protected void fireTargetStarted(Target target) {
-        BuildEvent event = new BuildEvent(target);
-        BuildListener[] currListeners = listeners;
+    protected void fireTargetStarted(final Target target) {
+        final BuildEvent event = new BuildEvent(target);
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             currListeners[i].targetStarted(event);
         }
@@ -2152,10 +2175,10 @@ public class Project implements ResourceFactory {
      *                  failure. May be <code>null</code>, indicating
      *                  a successful build.
      */
-    protected void fireTargetFinished(Target target, Throwable exception) {
-        BuildEvent event = new BuildEvent(target);
+    protected void fireTargetFinished(final Target target, final Throwable exception) {
+        final BuildEvent event = new BuildEvent(target);
         event.setException(exception);
-        BuildListener[] currListeners = listeners;
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             currListeners[i].targetFinished(event);
         }
@@ -2169,11 +2192,11 @@ public class Project implements ResourceFactory {
      * @param task The target which is starting to execute.
      *               Must not be <code>null</code>.
      */
-    protected void fireTaskStarted(Task task) {
+    protected void fireTaskStarted(final Task task) {
         // register this as the current task on the current thread.
         registerThreadTask(Thread.currentThread(), task);
-        BuildEvent event = new BuildEvent(task);
-        BuildListener[] currListeners = listeners;
+        final BuildEvent event = new BuildEvent(task);
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             currListeners[i].taskStarted(event);
         }
@@ -2189,13 +2212,13 @@ public class Project implements ResourceFactory {
      *                  failure. May be <code>null</code>, indicating
      *                  a successful build.
      */
-    protected void fireTaskFinished(Task task, Throwable exception) {
+    protected void fireTaskFinished(final Task task, final Throwable exception) {
         registerThreadTask(Thread.currentThread(), null);
         System.out.flush();
         System.err.flush();
-        BuildEvent event = new BuildEvent(task);
+        final BuildEvent event = new BuildEvent(task);
         event.setException(exception);
-        BuildListener[] currListeners = listeners;
+        final BuildListener[] currListeners = listeners;
         for (int i = 0; i < currListeners.length; i++) {
             currListeners[i].taskFinished(event);
         }
@@ -2213,14 +2236,14 @@ public class Project implements ResourceFactory {
      * @param message  The message to send. Should not be <code>null</code>.
      * @param priority The priority of the message.
      */
-    private void fireMessageLoggedEvent(BuildEvent event, String message,
-                                        int priority) {
+    private void fireMessageLoggedEvent(final BuildEvent event, String message,
+                                        final int priority) {
 
         if (message == null) {
             message = String.valueOf(message);
         }
         if (message.endsWith(StringUtils.LINE_SEP)) {
-            int endIndex = message.length() - StringUtils.LINE_SEP.length();
+            final int endIndex = message.length() - StringUtils.LINE_SEP.length();
             event.setMessage(message.substring(0, endIndex), priority);
         } else {
             event.setMessage(message, priority);
@@ -2243,7 +2266,7 @@ public class Project implements ResourceFactory {
         }
         try {
             isLoggingMessage.set(Boolean.TRUE);
-            BuildListener[] currListeners = listeners;
+            final BuildListener[] currListeners = listeners;
             for (int i = 0; i < currListeners.length; i++) {
                 currListeners[i].messageLogged(event);
             }
@@ -2261,8 +2284,8 @@ public class Project implements ResourceFactory {
      * @param message  The message to send. Should not be <code>null</code>.
      * @param priority The priority of the message.
      */
-    protected void fireMessageLogged(Project project, String message,
-                                     int priority) {
+    protected void fireMessageLogged(final Project project, final String message,
+                                     final int priority) {
         fireMessageLogged(project, message, null, priority);
     }
 
@@ -2277,9 +2300,9 @@ public class Project implements ResourceFactory {
      * @param priority The priority of the message.
      * @since 1.7
      */
-    protected void fireMessageLogged(Project project, String message,
-            Throwable throwable, int priority) {
-        BuildEvent event = new BuildEvent(project);
+    protected void fireMessageLogged(final Project project, final String message,
+            final Throwable throwable, final int priority) {
+        final BuildEvent event = new BuildEvent(project);
         event.setException(throwable);
         fireMessageLoggedEvent(event, message, priority);
     }
@@ -2293,8 +2316,8 @@ public class Project implements ResourceFactory {
      * @param message  The message to send. Should not be <code>null</code>.
      * @param priority The priority of the message.
      */
-    protected void fireMessageLogged(Target target, String message,
-                                     int priority) {
+    protected void fireMessageLogged(final Target target, final String message,
+                                     final int priority) {
         fireMessageLogged(target, message, null, priority);
     }
 
@@ -2309,9 +2332,9 @@ public class Project implements ResourceFactory {
      * @param priority The priority of the message.
      * @since 1.7
      */
-    protected void fireMessageLogged(Target target, String message,
-            Throwable throwable, int priority) {
-        BuildEvent event = new BuildEvent(target);
+    protected void fireMessageLogged(final Target target, final String message,
+            final Throwable throwable, final int priority) {
+        final BuildEvent event = new BuildEvent(target);
         event.setException(throwable);
         fireMessageLoggedEvent(event, message, priority);
     }
@@ -2325,7 +2348,7 @@ public class Project implements ResourceFactory {
      * @param message  The message to send. Should not be <code>null</code>.
      * @param priority The priority of the message.
      */
-    protected void fireMessageLogged(Task task, String message, int priority) {
+    protected void fireMessageLogged(final Task task, final String message, final int priority) {
         fireMessageLogged(task, message, null, priority);
     }
 
@@ -2340,9 +2363,9 @@ public class Project implements ResourceFactory {
      * @param priority The priority of the message.
      * @since 1.7
      */
-    protected void fireMessageLogged(Task task, String message,
-            Throwable throwable, int priority) {
-        BuildEvent event = new BuildEvent(task);
+    protected void fireMessageLogged(final Task task, final String message,
+            final Throwable throwable, final int priority) {
+        final BuildEvent event = new BuildEvent(task);
         event.setException(throwable);
         fireMessageLoggedEvent(event, message, priority);
     }
@@ -2355,8 +2378,8 @@ public class Project implements ResourceFactory {
      * @param task the task to be registered.
      * @since Ant 1.5
      */
-    public void registerThreadTask(Thread thread, Task task) {
-        synchronized(threadTasks) {
+    public void registerThreadTask(final Thread thread, final Task task) {
+        synchronized (threadTasks) {
             if (task != null) {
                 threadTasks.put(thread, task);
                 threadGroupTasks.put(thread.getThreadGroup(), task);
@@ -2374,13 +2397,13 @@ public class Project implements ResourceFactory {
      * @return the task which is currently registered for the given thread or
      *         null if no task is registered.
      */
-    public Task getThreadTask(Thread thread) {
-        synchronized(threadTasks) {
-            Task task = (Task) threadTasks.get(thread);
+    public Task getThreadTask(final Thread thread) {
+        synchronized (threadTasks) {
+            Task task = threadTasks.get(thread);
             if (task == null) {
                 ThreadGroup group = thread.getThreadGroup();
                 while (task == null && group != null) {
-                    task = (Task) threadGroupTasks.get(group);
+                    task = threadGroupTasks.get(group);
                     group = group.getParent();
                 }
             }
@@ -2405,7 +2428,7 @@ public class Project implements ResourceFactory {
          * of UnknownElement (this is similar with the JDNI
          * refs behavior).
          */
-        private Object getReal(Object key) {
+        private Object getReal(final Object key) {
             return super.get(key);
         }
 
@@ -2420,11 +2443,12 @@ public class Project implements ResourceFactory {
          * @param key lookup key.
          * @return mapped value.
          */
-        public Object get(Object key) {
+        @Override
+        public Object get(final Object key) {
             Object o = getReal(key);
             if (o instanceof UnknownElement) {
                 // Make sure that
-                UnknownElement ue = (UnknownElement) o;
+                final UnknownElement ue = (UnknownElement) o;
                 ue.maybeConfigure();
                 o = ue.getRealThing();
             }
@@ -2444,13 +2468,13 @@ public class Project implements ResourceFactory {
             return;
         }
         try {
-            Method method =
+            final Method method =
                 obj.getClass().getMethod(
                     "setProject", new Class[] {Project.class});
             if (method != null) {
                 method.invoke(obj, new Object[] {this});
             }
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             // ignore this if the object does not have
             // a set project method or the method
             // is private/protected.
@@ -2464,7 +2488,7 @@ public class Project implements ResourceFactory {
      * @return the file resource.
      * @since Ant 1.7
      */
-    public Resource getResource(String name) {
+    public Resource getResource(final String name) {
         return new FileResource(getBaseDir(), name);
     }
 }

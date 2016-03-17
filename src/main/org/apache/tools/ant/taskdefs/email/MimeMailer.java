@@ -17,15 +17,16 @@
  */
 package org.apache.tools.ant.taskdefs.email;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-
+import java.security.Provider;
+import java.security.Security;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Locale;
@@ -33,14 +34,10 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import java.security.Provider;
-import java.security.Security;
-
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
-
-import javax.mail.Authenticator;
 import javax.mail.Address;
+import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
@@ -55,6 +52,7 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
+
 
 /**
  * Uses the JavaMail classes to send Mime format email.
@@ -88,7 +86,7 @@ public class MimeMailer extends Mailer {
                 throw new IOException("No data");
             }
             if (out != null) {
-                String encodedOut = out.toString(charset);
+                final String encodedOut = out.toString(charset);
                 data = (data != null) ? data.concat(encodedOut) : encodedOut;
                 out = null;
             }
@@ -100,7 +98,7 @@ public class MimeMailer extends Mailer {
             return out;
         }
 
-        public void setContentType(String type) {
+        public void setContentType(final String type) {
             this.type = type.toLowerCase(Locale.ENGLISH);
         }
 
@@ -118,7 +116,7 @@ public class MimeMailer extends Mailer {
             return "StringDataSource";
         }
 
-        public void setCharset(String charset) {
+        public void setCharset(final String charset) {
             this.charset = charset;
         }
 
@@ -134,7 +132,7 @@ public class MimeMailer extends Mailer {
      */
     public void send() {
         try {
-            Properties props = new Properties();
+            final Properties props = new Properties();
 
             props.put("mail.smtp.host", host);
             props.put("mail.smtp.port", String.valueOf(port));
@@ -146,10 +144,10 @@ public class MimeMailer extends Mailer {
             Authenticator auth = null;
             if (SSL) {
                 try {
-                    Provider p = (Provider) Class.forName(
+                    final Provider p = (Provider) Class.forName(
                         "com.sun.net.ssl.internal.ssl.Provider").newInstance();
                     Security.addProvider(p);
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     throw new BuildException("could not instantiate ssl "
                         + "security provider, check that you have JSSE in "
                         + "your classpath");
@@ -157,7 +155,9 @@ public class MimeMailer extends Mailer {
                 // SMTP provider
                 props.put("mail.smtp.socketFactory.class", SSL_FACTORY);
                 props.put("mail.smtp.socketFactory.fallback", "false");
+                props.put("mail.smtps.host", host);
                 if (isPortExplicitlySpecified()) {
+                    props.put("mail.smtps.port", String.valueOf(port));
                     props.put("mail.smtp.socketFactory.port",
                               String.valueOf(port));
                 }
@@ -172,8 +172,8 @@ public class MimeMailer extends Mailer {
             sesh = Session.getInstance(props, auth);
 
             //create the message
-            MimeMessage msg = new MimeMessage(sesh);
-            MimeMultipart attachments = new MimeMultipart();
+            final MimeMessage msg = new MimeMessage(sesh);
+            final MimeMultipart attachments = new MimeMultipart();
 
             //set the sender
             if (from.getName() == null) {
@@ -207,7 +207,7 @@ public class MimeMailer extends Mailer {
                 }
             }
             // Using javax.activation.DataSource paradigm
-            StringDataSource sds = new StringDataSource();
+            final StringDataSource sds = new StringDataSource();
             sds.setContentType(message.getMimeType());
             sds.setCharset(charset);
 
@@ -217,23 +217,23 @@ public class MimeMailer extends Mailer {
             msg.addHeader("Date", getDate());
 
             if (headers != null) {
-                for (Iterator iter = headers.iterator(); iter.hasNext();) {
-                    Header h = (Header) iter.next();
+                for (final Iterator iter = headers.iterator(); iter.hasNext();) {
+                    final Header h = (Header) iter.next();
                     msg.addHeader(h.getName(), h.getValue());
                 }
             }
-            PrintStream out = new PrintStream(sds.getOutputStream());
+            final PrintStream out = new PrintStream(sds.getOutputStream());
             message.print(out);
             out.close();
 
-            MimeBodyPart textbody = new MimeBodyPart();
+            final MimeBodyPart textbody = new MimeBodyPart();
             textbody.setDataHandler(new DataHandler(sds));
             attachments.addBodyPart(textbody);
 
-            Enumeration e = files.elements();
+            final Enumeration e = files.elements();
 
             while (e.hasMoreElements()) {
-                File file = (File) e.nextElement();
+                final File file = (File) e.nextElement();
 
                 MimeBodyPart body;
 
@@ -243,8 +243,8 @@ public class MimeMailer extends Mailer {
                          + "\" does not exist or is not "
                          + "readable.");
                 }
-                FileDataSource fileData = new FileDataSource(file);
-                DataHandler fileDataHandler = new DataHandler(fileData);
+                final FileDataSource fileData = new FileDataSource(file);
+                final DataHandler fileDataHandler = new DataHandler(fileData);
 
                 body.setDataHandler(fileDataHandler);
                 body.setFileName(file.getName());
@@ -253,10 +253,10 @@ public class MimeMailer extends Mailer {
             msg.setContent(attachments);
             try {
                 // Send the message using SMTP, or SMTPS if the host uses SSL
-                Transport transport = sesh.getTransport(SSL ? "smtps" : "smtp");
+                final Transport transport = sesh.getTransport(SSL ? "smtps" : "smtp");
                 transport.connect(host, user, password);
                 transport.sendMessage(msg, msg.getAllRecipients());
-            } catch (SendFailedException sfe) {
+            } catch (final SendFailedException sfe) {
                 if (!shouldIgnoreInvalidRecipients()) {
                     throw new BuildException(GENERIC_ERROR, sfe);
                 } else if (sfe.getValidSentAddresses() == null
@@ -280,22 +280,22 @@ public class MimeMailer extends Mailer {
                     }
                 }
             }
-        } catch (MessagingException e) {
+        } catch (final MessagingException e) {
             throw new BuildException(GENERIC_ERROR, e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new BuildException(GENERIC_ERROR, e);
         }
     }
 
-    private static InternetAddress[] internetAddresses(Vector list)
+    private static InternetAddress[] internetAddresses(final Vector list)
         throws AddressException, UnsupportedEncodingException {
         final int size = list.size();
-        InternetAddress[] addrs = new InternetAddress[size];
+        final InternetAddress[] addrs = new InternetAddress[size];
 
         for (int i = 0; i < size; ++i) {
-            EmailAddress addr = (EmailAddress) list.elementAt(i);
+            final EmailAddress addr = (EmailAddress) list.elementAt(i);
 
-            String name = addr.getName();
+            final String name = addr.getName();
             addrs[i] = (name == null)
                 ? new InternetAddress(addr.getAddress())
                 : new InternetAddress(addr.getAddress(), name);
@@ -303,23 +303,23 @@ public class MimeMailer extends Mailer {
         return addrs;
     }
 
-    private String parseCharSetFromMimeType(String type) {
+    private String parseCharSetFromMimeType(final String type) {
         if (type == null) {
             return null;
         }
-        int pos = type.indexOf("charset");
+        final int pos = type.indexOf("charset");
         if (pos < 0) {
           return null;
         }
         // Assuming mime type in form "text/XXXX; charset=XXXXXX"
-        StringTokenizer token = new StringTokenizer(type.substring(pos), "=; ");
+        final StringTokenizer token = new StringTokenizer(type.substring(pos), "=; ");
         token.nextToken(); // Skip 'charset='
         return token.nextToken();
     }
 
-    private void didntReach(Address addr, String category,
-                            MessagingException ex) {
-        String msg = "Failed to send mail to " + category + " address "
+    private void didntReach(final Address addr, final String category,
+                            final MessagingException ex) {
+        final String msg = "Failed to send mail to " + category + " address "
             + addr + " because of " + ex.getMessage();
         if (task != null) {
             task.log(msg, Project.MSG_WARN);
@@ -331,12 +331,11 @@ public class MimeMailer extends Mailer {
     static class SimpleAuthenticator extends Authenticator {
         private String user = null;
         private String password = null;
-        public SimpleAuthenticator(String user, String password) {
+        public SimpleAuthenticator(final String user, final String password) {
             this.user = user;
             this.password = password;
         }
         public PasswordAuthentication getPasswordAuthentication() {
-
             return new PasswordAuthentication(user, password);
         }
     }

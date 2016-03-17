@@ -44,7 +44,8 @@
 	<classpathentry kind="lib" path="lib/optional/jdepend-2.9.1.jar"/>
 	<classpathentry kind="lib" path="lib/optional/jruby-0.9.8.jar"/>
 	<classpathentry kind="lib" path="lib/optional/js-1.6R7.jar"/>
-	<classpathentry kind="lib" path="lib/optional/jsch-0.1.42.jar"/>
+	<classpathentry kind="lib" path="lib/optional/jsch-0.1.50.jar"/>
+	<classpathentry kind="lib" path="lib/optional/junit-3.8.2.jar"/>
 	<classpathentry kind="lib" path="lib/optional/junit-4.11.jar"/>
 	<classpathentry kind="lib" path="lib/optional/log4j-1.2.14.jar"/>
 	<classpathentry kind="lib" path="lib/optional/mail-1.4.jar"/>

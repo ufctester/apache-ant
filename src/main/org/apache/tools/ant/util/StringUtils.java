@@ -17,11 +17,11 @@
  */
 package org.apache.tools.ant.util;
 
-import org.apache.tools.ant.BuildException;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Vector;
+
+import org.apache.tools.ant.BuildException;
 
 /**
  * A set of helper methods related to string manipulation.
@@ -140,7 +140,7 @@ public final class StringUtils {
      * xml does not do "c" like interpretation of strings.
      * i.e. \n\r\t etc.
      * this method processes \n, \r, \t, \f, \\
-     * also subs \s -> " \n\r\t\f"
+     * also subs \s -&gt; " \n\r\t\f"
      * a trailing '\' will be ignored
      *
      * @param input raw string with possible embedded '\'s

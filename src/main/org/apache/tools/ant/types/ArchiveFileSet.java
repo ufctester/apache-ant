@@ -20,11 +20,12 @@ package org.apache.tools.ant.types;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Stack;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.ant.types.resources.FileProvider;
+import org.apache.tools.ant.types.resources.FileResource;
 import org.apache.tools.zip.UnixStat;
 
 /**
@@ -71,6 +72,8 @@ public abstract class ArchiveFileSet extends FileSet {
 
     private boolean errorOnMissingArchive = true;
 
+    private String encoding = null;
+
     /** Constructor for ArchiveFileSet */
     public ArchiveFileSet() {
         super();
@@ -99,6 +102,7 @@ public abstract class ArchiveFileSet extends FileSet {
         fileModeHasBeenSet = fileset.fileModeHasBeenSet;
         dirModeHasBeenSet = fileset.dirModeHasBeenSet;
         errorOnMissingArchive = fileset.errorOnMissingArchive;
+        encoding = fileset.encoding;
     }
 
     /**
@@ -264,6 +268,33 @@ public abstract class ArchiveFileSet extends FileSet {
         }
         dieOnCircularReference(p);
         return fullpath;
+    }
+
+    /**
+     * Set the encoding used for this ZipFileSet.
+     * @param enc encoding as String.
+     * @since Ant 1.9.5
+     */
+    public void setEncoding(String enc) {
+        checkAttributesAllowed();
+        this.encoding = enc;
+    }
+
+    /**
+     * Get the encoding used for this ZipFileSet.
+     * @return String encoding.
+     * @since Ant 1.9.5
+     */
+    public String getEncoding() {
+        if (isReference()) {
+            AbstractFileSet ref = getRef(getProject());
+            if (ref instanceof ArchiveFileSet) {
+                return ((ArchiveFileSet) ref).getEncoding();
+            } else {
+                return null;
+            }
+        }
+        return encoding;
     }
 
     /**

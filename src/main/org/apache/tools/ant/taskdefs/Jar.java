@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -182,6 +181,7 @@ public class Jar extends Zip {
         archiveType = "jar";
         emptyBehavior = "create";
         setEncoding("UTF8");
+        setZip64Mode(Zip64ModeAttribute.NEVER);
         rootEntries = new Vector<String>();
     }
 
@@ -353,7 +353,7 @@ public class Jar extends Zip {
                 try {
                     zf.close();
                 } catch (IOException e) {
-                    // XXX - log an error?  throw an exception?
+                    // TODO - log an error?  throw an exception?
                 }
             }
         }
@@ -392,7 +392,7 @@ public class Jar extends Zip {
                 try {
                     zf.close();
                 } catch (IOException e) {
-                    // XXX - log an error?  throw an exception?
+                    // TODO - log an error?  throw an exception?
                 }
             }
         }
@@ -516,14 +516,31 @@ public class Jar extends Zip {
     private Manifest createManifest()
         throws BuildException {
         try {
-            Manifest finalManifest = Manifest.getDefaultManifest();
-
             if (manifest == null) {
                 if (manifestFile != null) {
                     // if we haven't got the manifest yet, attempt to
                     // get it now and have manifest be the final merge
                     manifest = getManifest(manifestFile);
                 }
+            }
+
+            // fileset manifest must come even before the default
+            // manifest if mergewithoutmain is selected and there is
+            // no explicit manifest specified - otherwise the Main
+            // section of the fileset manifest is still merged to the
+            // final manifest.
+            boolean mergeFileSetFirst = !mergeManifestsMain
+                && filesetManifest != null
+                && configuredManifest == null && manifest == null;
+
+            Manifest finalManifest;
+            if (mergeFileSetFirst) {
+                finalManifest = new Manifest();
+                finalManifest.merge(filesetManifest, false, mergeClassPaths);
+                finalManifest.merge(Manifest.getDefaultManifest(),
+                                    true, mergeClassPaths);
+            } else {
+                finalManifest = Manifest.getDefaultManifest();
             }
 
             /*
@@ -537,7 +554,9 @@ public class Jar extends Zip {
             if (isInUpdateMode()) {
                 finalManifest.merge(originalManifest, false, mergeClassPaths);
             }
-            finalManifest.merge(filesetManifest, false, mergeClassPaths);
+            if (!mergeFileSetFirst) {
+                finalManifest.merge(filesetManifest, false, mergeClassPaths);
+            }
             finalManifest.merge(configuredManifest, !mergeManifestsMain,
                                 mergeClassPaths);
             finalManifest.merge(manifest, !mergeManifestsMain,
@@ -806,7 +825,7 @@ public class Jar extends Zip {
             // this pass is only there to construct the merged
             // manifest this means we claim an update was needed and
             // only include the manifests, skipping any uptodate
-            // checks here defering them for the second run
+            // checks here deferring them for the second run
             Resource[][] manifests = grabManifests(rcs);
             int count = 0;
             for (int i = 0; i < manifests.length; i++) {
@@ -892,7 +911,7 @@ public class Jar extends Zip {
                 log("Building MANIFEST-only jar: "
                     + getDestFile().getAbsolutePath());
             }
-            zOut = new ZipOutputStream(new FileOutputStream(getDestFile()));
+            zOut = new ZipOutputStream(getDestFile());
 
             zOut.setEncoding(getEncoding());
             if (isCompress()) {
@@ -937,7 +956,7 @@ public class Jar extends Zip {
     // CheckStyle:LineLength OFF - Link is too long.
     /**
      * Check against packaging spec
-     * @see http://java.sun.com/j2se/1.3/docs/guide/versioning/spec/VersioningSpecification.html#PackageVersioning
+     * @see "http://java.sun.com/j2se/1.3/docs/guide/versioning/spec/VersioningSpecification.html#PackageVersioning"
      */
     // CheckStyle:LineLength ON
     private void checkJarSpec() {

@@ -27,13 +27,14 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Commandline;
 import org.apache.tools.ant.types.Environment;
-import org.apache.tools.ant.util.StringUtils;
 import org.apache.tools.ant.util.FileUtils;
+import org.apache.tools.ant.util.StringUtils;
 
 /**
  * original Cvs.java 1.20
@@ -259,7 +260,7 @@ public abstract class AbstractCvsTask extends Task {
      * @throws BuildException if failonError is set to true and the cvs command fails
      */
     protected void runCommand(Commandline toExecute) throws BuildException {
-        // XXX: we should use JCVS (www.ice.com/JCVS) instead of
+        // TODO: we should use JCVS (www.ice.com/JCVS) instead of
         // command line execution so that we don't rely on having
         // native CVS stuff around (SM)
 

@@ -200,8 +200,14 @@ public class BTest extends TestCase {
     </junit>
     <au:assertFileExists file="${output}/TEST-test.ATest.txt" />
     <au:assertFileExists file="${output}/TEST-test.ATest.xml" />
+   <!--
     <au:assertFileExists file="${output}/TEST-test.BTest.txt" />
     <au:assertFileExists file="${output}/TEST-test.BTest.xml" />
+
+    These files should only exist if something was written to the log by te runner.
+    The test previously passed even though the files were empty, which isn't a meaningful result.
+    TODO we should probably improve the testing around reporting of tests that have timed-out
+    -->
   </target>
 
   <target name="-ifUnlessSetup" depends="setUp">
@@ -310,7 +316,11 @@ public class BTest extends TestCase {
     </au:expectfailure>
   </target>
 
-  <target name="testTestMethods" if="jdk1.5+">
+  <target name="testTestMethods">
+    <condition property="source" value="6">
+      <isset property="jdk1.6+"/>
+    </condition>
+    <property name="source" value="5"/>
     <echo file="${input}/T1.java">public class T1 extends
 			junit.framework.TestCase {
 			public void testOK() {}
@@ -325,7 +335,7 @@ public class BTest extends TestCase {
 			public void bad() {
 			throw new RuntimeException("failed");}
 			}</echo>
-    <javac srcdir="${input}" destdir="${output}" includes="T1.java,T2.java" source="5" includeantruntime="false">
+    <javac srcdir="${input}" destdir="${output}" includes="T1.java,T2.java" source="${source}" includeantruntime="false">
       <classpath>
         <path refid="junit" />
       </classpath>
@@ -337,6 +347,26 @@ public class BTest extends TestCase {
       </classpath>
       <test name="T1" methods="testOK" />
       <test name="T2" methods="ok" />
+    </junit>
+  </target>
+
+  <target name="testClasspathBuildingSurvivesNonZips" depends="setUp"
+          description="https://issues.apache.org/bugzilla/show_bug.cgi?id=53964">
+    <empty-test classname="ATest" package="org.apache.ant.test" />
+    <javac srcdir="${input}" destdir="${output}">
+      <classpath refid="junit" />
+    </javac>
+    <junit fork="true" printsummary="true" haltonerror="true">
+      <classpath>
+        <pathelement location="${output}" />
+        <pathelement location="${ant.file}" />
+        <path refid="junit" />
+      </classpath>
+      <batchtest>
+        <fileset dir="${output}">
+          <include name="**/*Test.class" />
+        </fileset>
+      </batchtest>
     </junit>
   </target>
 </project>

@@ -26,19 +26,18 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.AbstractCvsTask;
+import org.apache.tools.ant.util.CollectionUtils;
 import org.apache.tools.ant.util.DOMElementWriter;
 import org.apache.tools.ant.util.DOMUtils;
-import org.apache.tools.ant.util.CollectionUtils;
 import org.apache.tools.ant.util.FileUtils;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -145,7 +144,7 @@ public class CvsTagDiff extends AbstractCvsTask {
     private File mydestfile;
 
     /**
-     * Used to skip over removed files 
+     * Used to skip over removed files
      */
     private boolean ignoreRemoved = false;
 
@@ -168,6 +167,7 @@ public class CvsTagDiff extends AbstractCvsTask {
      * The package/module to analyze.
      * @param p the name of the package to analyse
      */
+    @Override
     public void setPackage(String p) {
         mypackage = p;
     }
@@ -223,7 +223,7 @@ public class CvsTagDiff extends AbstractCvsTask {
      * @param b the ignore removed indicator.
      *
      * @since Ant 1.8.0
-     */ 
+     */
     public void setIgnoreRemoved(boolean b) {
         ignoreRemoved = b;
     }
@@ -234,6 +234,7 @@ public class CvsTagDiff extends AbstractCvsTask {
      *
      * @exception BuildException if an error occurs
      */
+    @Override
     public void execute() throws BuildException {
         // validate the input parameters
         validate();

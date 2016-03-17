@@ -17,25 +17,27 @@
  */
 package org.apache.tools.ant.filters;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.File;
-import java.io.BufferedReader;
-import java.io.FileReader;
+
 import org.apache.tools.ant.types.Parameter;
 
 /**
  * Concats a file before and/or after the file.
  *
- * <p>Example:<pre>
- * <copy todir="build">
- *     <fileset dir="src" includes="*.java"/>
- *     <filterchain>
- *         <concatfilter prepend="apache-license-java.txt"/>
- *     </filterchain>
- * </copy>
+ * <p>Example:</p><pre>
+ * &lt;copy todir="build"&gt;
+ *     &lt;fileset dir="src" includes="*.java"/&gt;
+ *     &lt;filterchain&gt;
+ *         &lt;concatfilter prepend="apache-license-java.txt"/&gt;
+ *     &lt;/filterchain&gt;
+ * &lt;/copy&gt;
  * </pre>
- * Copies all java sources from <i>src</i> to <i>build</i> and adds the
+ *
+ * <p>Copies all java sources from <i>src</i> to <i>build</i> and adds the
  * content of <i>apache-license-java.txt</i> add the beginning of each
  * file.</p>
  *
@@ -88,6 +90,7 @@ public final class ConcatFilter extends BaseParamFilterReader
      * @exception IOException if the underlying stream throws an IOException
      * during reading
      */
+    @Override
     public int read() throws IOException {
         // do the "singleton" initialization
         if (!getInitialized()) {
@@ -169,7 +172,7 @@ public final class ConcatFilter extends BaseParamFilterReader
      *         the specified reader
      */
     public Reader chain(final Reader rdr) {
-        ConcatFilter newFilter = new ConcatFilter(rdr);
+        final ConcatFilter newFilter = new ConcatFilter(rdr);
         newFilter.setPrepend(getPrepend());
         newFilter.setAppend(getAppend());
         // Usually the initialized is set to true. But here it must not.
@@ -186,7 +189,7 @@ public final class ConcatFilter extends BaseParamFilterReader
      */
     private void initialize() throws IOException {
         // get parameters
-        Parameter[] params = getParameters();
+        final Parameter[] params = getParameters();
         if (params != null) {
             for (int i = 0; i < params.length; i++) {
                 if ("prepend".equals(params[i].getName())) {

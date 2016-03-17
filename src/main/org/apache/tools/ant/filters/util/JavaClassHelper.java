@@ -19,6 +19,7 @@ package org.apache.tools.ant.filters.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.ConstantValue;
 import org.apache.bcel.classfile.Field;
@@ -40,7 +41,7 @@ public final class JavaClassHelper {
      * @return a StringBuffer contains the name=value pairs
      * @exception IOException if an error occurs
      */
-    public static StringBuffer getConstants(byte[] bytes)
+    public static StringBuffer getConstants(final byte[] bytes)
         throws IOException {
         final StringBuffer sb = new StringBuffer();
         final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);

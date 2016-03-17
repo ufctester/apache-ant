@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
@@ -121,7 +122,7 @@ public class JikesOutputParser implements ExecuteStreamHandler {
         String line;
         String lower;
         // We assume, that every output, jikes does, stands for an error/warning
-        // XXX
+        // TODO
         // Is this correct?
 
         // TODO:

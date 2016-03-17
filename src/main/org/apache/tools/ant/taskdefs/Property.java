@@ -22,27 +22,25 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Vector;
 
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.PropertyHelper;
 import org.apache.tools.ant.Task;
+import org.apache.tools.ant.property.ResolvePropertyMap;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.util.FileUtils;
-import org.apache.tools.ant.property.ResolvePropertyMap;
 
 /**
- * Sets a property by name, or set of properties (from file or
+ * <p>Sets a property by name, or set of properties (from file or
  * resource) in the project.  </p>
- * Properties are immutable: whoever sets a property first freezes it for the
+ * <p>Properties are immutable: whoever sets a property first freezes it for the
  * rest of the build; they are most definitely not variable.
  * <p>There are seven ways to set properties:</p>
  * <ul>
@@ -433,6 +431,7 @@ public class Property extends Task {
      *             deprecated without replacement.
      * @ant.attribute ignore="true"
      */
+    @Deprecated
     public void setUserProperty(boolean userProperty) {
         log("DEPRECATED: Ignoring request to set user property in Property"
             + " task.", Project.MSG_WARN);
@@ -442,6 +441,7 @@ public class Property extends Task {
      * get the value of this property
      * @return the current value or the empty string
      */
+    @Override
     public String toString() {
         return value == null ? "" : value;
     }
@@ -452,6 +452,7 @@ public class Property extends Task {
      * here is where it is loaded
      * @throws BuildException on error
      */
+    @Override
     public void execute() throws BuildException {
         if (getProject() == null) {
             throw new IllegalStateException("project has not been set");
@@ -522,7 +523,7 @@ public class Property extends Task {
             }
         }
     }
-    
+
     /**
      * load properties from a url
      * @param url url to load from
@@ -555,7 +556,7 @@ public class Property extends Task {
      * @param isXml <tt>true</tt> if we should try to load from xml
      * @throws IOException if something goes wrong
      * @since 1.8.0
-     * @see http://java.sun.com/dtd/properties.dtd
+     * @see "http://java.sun.com/dtd/properties.dtd"
      * @see java.util.Properties#loadFromXML(InputStream)
      */
     private void loadProperties(
@@ -653,7 +654,7 @@ public class Property extends Task {
         }
         log("Loading Environment " + prefix, Project.MSG_VERBOSE);
         Map osEnv = Execute.getEnvironmentVariables();
-        for (Iterator e = osEnv.entrySet().iterator(); e.hasNext(); ) {
+        for (Iterator e = osEnv.entrySet().iterator(); e.hasNext();) {
             Map.Entry entry = (Map.Entry) e.next();
             props.put(prefix + entry.getKey(), entry.getValue());
         }
@@ -714,7 +715,7 @@ public class Property extends Task {
      */
     private void resolveAllProperties(Map props) throws BuildException {
         PropertyHelper propertyHelper
-            = (PropertyHelper) PropertyHelper.getPropertyHelper(getProject());
+            = PropertyHelper.getPropertyHelper(getProject());
         new ResolvePropertyMap(
                                getProject(),
                                propertyHelper,

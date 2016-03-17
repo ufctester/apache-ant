@@ -17,8 +17,8 @@
  */
 package org.apache.tools.ant.util;
 
-import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Hashtable;
 
 /** Hashtable implementation that allows delayed construction
  * of expensive objects
@@ -115,6 +115,6 @@ public class LazyHashtable extends Hashtable {
         return super.keys();
     }
 
-    // XXX Unfortunately JDK1.2 adds entrySet(), keySet(), values() -
+    // TODO Unfortunately JDK1.2 adds entrySet(), keySet(), values() -
     // implementing this requires a small hack, we can add it later.
 }

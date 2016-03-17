@@ -18,7 +18,9 @@
 
 package org.apache.tools.ant.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 @SuppressWarnings("ResultOfObjectAllocationIgnored")
@@ -40,7 +42,7 @@ public class DeweyDecimalTest {
         new DeweyDecimal("1.2.");
     }
 
-    // XXX initial dots, empty string, null, negative numbers, ...
+    // TODO initial dots, empty string, null, negative numbers, ...
 
     @Test public void testHashCode() {
         assertEquals(new DeweyDecimal("1.2.3").hashCode(), new DeweyDecimal("1.2.3").hashCode());
@@ -63,6 +65,6 @@ public class DeweyDecimalTest {
         assertTrue(new DeweyDecimal("1.2").compareTo(new DeweyDecimal("1.2.0")) == 0);
     }
 
-    // XXX isGreaterThan, ...
+    // TODO isGreaterThan, ...
 
 }

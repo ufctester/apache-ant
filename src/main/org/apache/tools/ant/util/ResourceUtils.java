@@ -31,25 +31,24 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Vector;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectComponent;
 import org.apache.tools.ant.filters.util.ChainReaderHelper;
-import org.apache.tools.ant.types.Resource;
-import org.apache.tools.ant.types.TimeComparison;
-import org.apache.tools.ant.types.ResourceFactory;
-import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.FilterSetCollection;
+import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.ResourceCollection;
+import org.apache.tools.ant.types.ResourceFactory;
+import org.apache.tools.ant.types.TimeComparison;
 import org.apache.tools.ant.types.resources.Appendable;
 import org.apache.tools.ant.types.resources.FileProvider;
 import org.apache.tools.ant.types.resources.FileResource;
-import org.apache.tools.ant.types.resources.Union;
-import org.apache.tools.ant.types.resources.Restrict;
 import org.apache.tools.ant.types.resources.Resources;
+import org.apache.tools.ant.types.resources.Restrict;
 import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Touchable;
+import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.types.resources.selectors.Date;
 import org.apache.tools.ant.types.resources.selectors.ResourceSelector;
 import org.apache.tools.ant.types.selectors.SelectorUtils;
@@ -89,10 +88,10 @@ public class ResourceUtils {
      * copied or processed, because the targets are out of date or do
      * not exist.
      */
-    public static Resource[] selectOutOfDateSources(ProjectComponent logTo,
-                                                    Resource[] source,
-                                                    FileNameMapper mapper,
-                                                    ResourceFactory targets) {
+    public static Resource[] selectOutOfDateSources(final ProjectComponent logTo,
+                                                    final Resource[] source,
+                                                    final FileNameMapper mapper,
+                                                    final ResourceFactory targets) {
         return selectOutOfDateSources(logTo, source, mapper, targets,
                                       FILE_UTILS.getFileTimestampGranularity());
     }
@@ -114,14 +113,14 @@ public class ResourceUtils {
      * not exist.
      * @since Ant 1.6.2
      */
-    public static Resource[] selectOutOfDateSources(ProjectComponent logTo,
-                                                    Resource[] source,
-                                                    FileNameMapper mapper,
-                                                    ResourceFactory targets,
-                                                    long granularity) {
-        Union u = new Union();
+    public static Resource[] selectOutOfDateSources(final ProjectComponent logTo,
+                                                    final Resource[] source,
+                                                    final FileNameMapper mapper,
+                                                    final ResourceFactory targets,
+                                                    final long granularity) {
+        final Union u = new Union();
         u.addAll(Arrays.asList(source));
-        ResourceCollection rc
+        final ResourceCollection rc
             = selectOutOfDateSources(logTo, u, mapper, targets, granularity);
         return rc.size() == 0 ? new Resource[0] : ((Union) rc).listResources();
     }
@@ -138,18 +137,18 @@ public class ResourceUtils {
      * @return ResourceCollection.
      * @since Ant 1.7
      */
-    public static ResourceCollection selectOutOfDateSources(ProjectComponent logTo,
-                                                            ResourceCollection source,
-                                                            FileNameMapper mapper,
-                                                            ResourceFactory targets,
+    public static ResourceCollection selectOutOfDateSources(final ProjectComponent logTo,
+                                                            final ResourceCollection source,
+                                                            final FileNameMapper mapper,
+                                                            final ResourceFactory targets,
                                                             final long granularity) {
         logFuture(logTo, source, granularity);
-        ResourceSelectorProvider p = 
+        final ResourceSelectorProvider p =
             new ResourceSelectorProvider() {
                 public ResourceSelector
                     getTargetSelectorForSource(final Resource sr) {
                     return new ResourceSelector() {
-                        public boolean isSelected(Resource target) {
+                        public boolean isSelected(final Resource target) {
                             /* Extra I/O, probably wasted:
                                if (target.isDirectory()) {
                                return false;
@@ -167,7 +166,7 @@ public class ResourceUtils {
     /**
      * Tells which sources should be reprocessed because the given
      * selector selects at least one target.
-     * 
+     *
      * @param logTo where to send (more or less) interesting output.
      * @param source ResourceCollection.
      * @param mapper filename mapper indicating how to find the target Resources.
@@ -178,19 +177,19 @@ public class ResourceUtils {
      * @return ResourceCollection.
      * @since Ant 1.8.0
      */
-    public static ResourceCollection selectSources(ProjectComponent logTo,
+    public static ResourceCollection selectSources(final ProjectComponent logTo,
                                                    ResourceCollection source,
-                                                   FileNameMapper mapper,
-                                                   ResourceFactory targets,
-                                                   ResourceSelectorProvider selector) {
+                                                   final FileNameMapper mapper,
+                                                   final ResourceFactory targets,
+                                                   final ResourceSelectorProvider selector) {
         if (source.size() == 0) {
             logTo.log("No sources found.", Project.MSG_VERBOSE);
             return Resources.NONE;
         }
         source = Union.getInstance(source);
 
-        Union result = new Union();
-        for (Resource sr : source) {
+        final Union result = new Union();
+        for (final Resource sr : source) {
             String srName = sr.getName();
             srName = srName == null
                 ? srName : srName.replace('/', File.separatorChar);
@@ -198,7 +197,7 @@ public class ResourceUtils {
             String[] targetnames = null;
             try {
                 targetnames = mapper.mapFileName(srName);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logTo.log("Caught " + e + " mapping resource " + sr,
                     Project.MSG_VERBOSE);
             }
@@ -212,18 +211,18 @@ public class ResourceUtils {
                     targetnames[i] = "(no name)";
                 }
             }
-            Union targetColl = new Union();
+            final Union targetColl = new Union();
             for (int i = 0; i < targetnames.length; i++) {
                 targetColl.add(targets.getResource(
                     targetnames[i].replace(File.separatorChar, '/')));
             }
             //find the out-of-date targets:
-            Restrict r = new Restrict();
+            final Restrict r = new Restrict();
             r.add(selector.getTargetSelectorForSource(sr));
             r.add(targetColl);
             if (r.size() > 0) {
                 result.add(sr);
-                Resource t = r.iterator().next();
+                final Resource t = r.iterator().next();
                 logTo.log(sr.getName() + " added as " + t.getName()
                     + (t.isExists() ? " is outdated." : " doesn\'t exist."),
                     Project.MSG_VERBOSE);
@@ -251,7 +250,7 @@ public class ResourceUtils {
      *
      * @since Ant 1.7
      */
-    public static void copyResource(Resource source, Resource dest) throws IOException {
+    public static void copyResource(final Resource source, final Resource dest) throws IOException {
         copyResource(source, dest, null);
     }
 
@@ -269,7 +268,7 @@ public class ResourceUtils {
      *
      * @since Ant 1.7
      */
-    public static void copyResource(Resource source, Resource dest, Project project)
+    public static void copyResource(final Resource source, final Resource dest, final Project project)
         throws IOException {
         copyResource(source, dest, null, null, false,
                      false, null, null, project);
@@ -302,11 +301,11 @@ public class ResourceUtils {
      *
      * @since Ant 1.7
      */
-    public static void copyResource(Resource source, Resource dest,
-                             FilterSetCollection filters, Vector filterChains,
-                             boolean overwrite, boolean preserveLastModified,
-                             String inputEncoding, String outputEncoding,
-                             Project project)
+    public static void copyResource(final Resource source, final Resource dest,
+                             final FilterSetCollection filters, final Vector filterChains,
+                             final boolean overwrite, final boolean preserveLastModified,
+                             final String inputEncoding, final String outputEncoding,
+                             final Project project)
         throws IOException {
         copyResource(source, dest, filters, filterChains, overwrite, preserveLastModified, false, inputEncoding, outputEncoding, project);
     }
@@ -339,12 +338,12 @@ public class ResourceUtils {
      *
      * @since Ant 1.8
      */
-    public static void copyResource(Resource source, Resource dest,
-                            FilterSetCollection filters, Vector filterChains,
-                            boolean overwrite, boolean preserveLastModified,
-                                    boolean append,
-                            String inputEncoding, String outputEncoding,
-                            Project project)
+    public static void copyResource(final Resource source, final Resource dest,
+                            final FilterSetCollection filters, final Vector filterChains,
+                            final boolean overwrite, final boolean preserveLastModified,
+                                    final boolean append,
+                            final String inputEncoding, final String outputEncoding,
+                            final Project project)
         throws IOException {
         copyResource(source, dest, filters, filterChains, overwrite,
                      preserveLastModified, append, inputEncoding,
@@ -379,12 +378,12 @@ public class ResourceUtils {
      *
      * @since Ant 1.8.2
      */
-    public static void copyResource(Resource source, Resource dest,
-                            FilterSetCollection filters, Vector filterChains,
-                            boolean overwrite, boolean preserveLastModified,
-                                    boolean append,
-                                    String inputEncoding, String outputEncoding,
-                                    Project project, boolean force)
+    public static void copyResource(final Resource source, final Resource dest,
+                            final FilterSetCollection filters, final Vector filterChains,
+                            final boolean overwrite, final boolean preserveLastModified,
+                                    final boolean append,
+                                    final String inputEncoding, final String outputEncoding,
+                                    final Project project, final boolean force)
         throws IOException {
         if (!(overwrite || SelectorUtils.isOutOfDate(source, dest, FileUtils.getFileUtils()
                 .getFileTimestampGranularity()))) {
@@ -396,7 +395,7 @@ public class ResourceUtils {
                                                && filterChains.size() > 0);
         String effectiveInputEncoding = null;
         if (source instanceof StringResource) {
-             effectiveInputEncoding = ((StringResource) source).getEncoding();
+            effectiveInputEncoding = ((StringResource) source).getEncoding();
         } else {
             effectiveInputEncoding = inputEncoding;
         }
@@ -406,8 +405,7 @@ public class ResourceUtils {
         }
         if (destFile != null && destFile.isFile() && !destFile.canWrite()) {
             if (!force) {
-                throw new IOException("can't write to read-only destination "
-                                      + "file " + destFile);
+                throw new ReadOnlyTargetFileException(destFile);
             } else if (!FILE_UTILS.tryHardToDelete(destFile)) {
                 throw new IOException("failed to delete read-only "
                                       + "destination file " + destFile);
@@ -415,154 +413,45 @@ public class ResourceUtils {
         }
 
         if (filterSetsAvailable) {
-            BufferedReader in = null;
-            BufferedWriter out = null;
-            try {
-                InputStreamReader isr = null;
-                if (effectiveInputEncoding == null) {
-                    isr = new InputStreamReader(source.getInputStream());
-                } else {
-                    isr = new InputStreamReader(source.getInputStream(),
-                                                effectiveInputEncoding);
-                }
-                in = new BufferedReader(isr);
-                OutputStream os = getOutputStream(dest, append, project);
-                OutputStreamWriter osw;
-                if (outputEncoding == null) {
-                    osw = new OutputStreamWriter(os);
-                } else {
-                    osw = new OutputStreamWriter(os, outputEncoding);
-                }
-                out = new BufferedWriter(osw);
-                if (filterChainsAvailable) {
-                    ChainReaderHelper crh = new ChainReaderHelper();
-                    crh.setBufferSize(FileUtils.BUF_SIZE);
-                    crh.setPrimaryReader(in);
-                    crh.setFilterChains(filterChains);
-                    crh.setProject(project);
-                    Reader rdr = crh.getAssembledReader();
-                    in = new BufferedReader(rdr);
-                }
-                LineTokenizer lineTokenizer = new LineTokenizer();
-                lineTokenizer.setIncludeDelims(true);
-                String newline = null;
-                String line = lineTokenizer.getToken(in);
-                while (line != null) {
-                    if (line.length() == 0) {
-                        // this should not happen, because the lines are
-                        // returned with the end of line delimiter
-                        out.newLine();
-                    } else {
-                        newline = filters.replaceTokens(line);
-                        out.write(newline);
-                    }
-                    line = lineTokenizer.getToken(in);
-                }
-            } finally {
-                FileUtils.close(out);
-                FileUtils.close(in);
-            }
+            copyWithFilterSets(source, dest, filters, filterChains,
+                               filterChainsAvailable, append,
+                               effectiveInputEncoding, outputEncoding,
+                               project);
         } else if (filterChainsAvailable
                    || (effectiveInputEncoding != null
                        && !effectiveInputEncoding.equals(outputEncoding))
                    || (effectiveInputEncoding == null && outputEncoding != null)) {
-            BufferedReader in = null;
-            BufferedWriter out = null;
-            try {
-                InputStreamReader isr = null;
-                if (effectiveInputEncoding == null) {
-                    isr = new InputStreamReader(source.getInputStream());
-                } else {
-                    isr = new InputStreamReader(source.getInputStream(),
-                                                effectiveInputEncoding);
-                }
-                in = new BufferedReader(isr);
-                OutputStream os = getOutputStream(dest, append, project);
-                OutputStreamWriter osw;
-                if (outputEncoding == null) {
-                    osw = new OutputStreamWriter(os);
-                } else {
-                    osw = new OutputStreamWriter(os, outputEncoding);
-                }
-                out = new BufferedWriter(osw);
-                if (filterChainsAvailable) {
-                    ChainReaderHelper crh = new ChainReaderHelper();
-                    crh.setBufferSize(FileUtils.BUF_SIZE);
-                    crh.setPrimaryReader(in);
-                    crh.setFilterChains(filterChains);
-                    crh.setProject(project);
-                    Reader rdr = crh.getAssembledReader();
-                    in = new BufferedReader(rdr);
-                }
-                char[] buffer = new char[FileUtils.BUF_SIZE];
-                while (true) {
-                    int nRead = in.read(buffer, 0, buffer.length);
-                    if (nRead == -1) {
-                        break;
-                    }
-                    out.write(buffer, 0, nRead);
-                }
-            } finally {
-                FileUtils.close(out);
-                FileUtils.close(in);
-            }
-        } else if (source.as(FileProvider.class) != null
-                   && destFile != null) {
-            File sourceFile =
-                source.as(FileProvider.class).getFile();
-
-            File parent = destFile.getParentFile();
-            if (parent != null && !parent.isDirectory()
-                && !destFile.getParentFile().mkdirs()) {
-                throw new IOException("failed to create the parent directory"
-                                      + " for " + destFile);
-            }
-
-            FileInputStream in = null;
-            FileOutputStream out = null;
-            FileChannel srcChannel = null;
-            FileChannel destChannel = null;
-
-            try {
-                in = new FileInputStream(sourceFile);
-                out = new FileOutputStream(destFile);
-                    
-                srcChannel = in.getChannel();
-                destChannel = out.getChannel();
-                
-                long position = 0;
-                long count = srcChannel.size();
-                while (position < count) {
-                    long chunk = Math.min(MAX_IO_CHUNK_SIZE, count - position);
-                    position +=
-                        destChannel.transferFrom(srcChannel, position, chunk);
-                }
-            } finally {
-                FileUtils.close(srcChannel);
-                FileUtils.close(destChannel);
-                FileUtils.close(out);
-                FileUtils.close(in);
-            }
+            copyWithFilterChainsOrTranscoding(source, dest, filterChains,
+                                              filterChainsAvailable, append,
+                                              effectiveInputEncoding,
+                                              outputEncoding, project);
         } else {
-            InputStream in = null;
-            OutputStream out = null;
-            try {
-                in = source.getInputStream();
-                out = getOutputStream(dest, append, project);
-
-                byte[] buffer = new byte[FileUtils.BUF_SIZE];
-                int count = 0;
-                do {
-                    out.write(buffer, 0, count);
-                    count = in.read(buffer, 0, buffer.length);
-                } while (count != -1);
-            } finally {
-                FileUtils.close(out);
-                FileUtils.close(in);
+            boolean copied = false;
+            if (source.as(FileProvider.class) != null
+                && destFile != null && !append) {
+                final File sourceFile =
+                    source.as(FileProvider.class).getFile();
+                try {
+                    copyUsingFileChannels(sourceFile, destFile);
+                    copied = true;
+                } catch (final IOException ex) {
+                    String msg = "Attempt to copy " + sourceFile
+                        + " to " + destFile + " using NIO Channels"
+                        + " failed due to '" + ex.getMessage()
+                        + "'.  Falling back to streams.";
+                    if (project != null) {
+                        project.log(msg, Project.MSG_WARN);
+                    } else {
+                        System.err.println(msg);
+                    }
+                }
+            }
+            if (!copied) {
+                copyUsingStreams(source, dest, append, project);
             }
         }
         if (preserveLastModified) {
-            Touchable t = dest.as(Touchable.class);
+            final Touchable t = dest.as(Touchable.class);
             if (t != null) {
                 setLastModified(t, source.getLastModified());
             }
@@ -579,7 +468,7 @@ public class ResourceUtils {
      *             if this is -1, the current time is used.
      * @since Ant 1.7
      */
-    public static void setLastModified(Touchable t, long time) {
+    public static void setLastModified(final Touchable t, final long time) {
         t.touch((time < 0) ? System.currentTimeMillis() : time);
     }
 
@@ -596,7 +485,7 @@ public class ResourceUtils {
      * @throws IOException if the Resources cannot be read.
      * @since Ant 1.7
      */
-    public static boolean contentEquals(Resource r1, Resource r2, boolean text) throws IOException {
+    public static boolean contentEquals(final Resource r1, final Resource r2, final boolean text) throws IOException {
         if (r1.isExists() != r2.isExists()) {
             return false;
         }
@@ -614,8 +503,8 @@ public class ResourceUtils {
             return true;
         }
         if (!text) {
-            long s1 = r1.getSize();
-            long s2 = r2.getSize();
+            final long s1 = r1.getSize();
+            final long s2 = r2.getSize();
             if (s1 != Resource.UNKNOWN_SIZE && s2 != Resource.UNKNOWN_SIZE
                     && s1 != s2) {
                 return false;
@@ -637,20 +526,20 @@ public class ResourceUtils {
      * @throws IOException if the Resources cannot be read.
      * @since Ant 1.7
      */
-    public static int compareContent(Resource r1, Resource r2, boolean text) throws IOException {
+    public static int compareContent(final Resource r1, final Resource r2, final boolean text) throws IOException {
         if (r1.equals(r2)) {
             return 0;
         }
-        boolean e1 = r1.isExists();
-        boolean e2 = r2.isExists();
+        final boolean e1 = r1.isExists();
+        final boolean e2 = r2.isExists();
         if (!(e1 || e2)) {
             return 0;
         }
         if (e1 != e2) {
             return e1 ? 1 : -1;
         }
-        boolean d1 = r1.isDirectory();
-        boolean d2 = r2.isDirectory();
+        final boolean d1 = r1.isDirectory();
+        final boolean d2 = r2.isDirectory();
         if (d1 && d2) {
             return 0;
         }
@@ -669,11 +558,11 @@ public class ResourceUtils {
      * FileResource with fileProvider's file.
      * @since Ant 1.8
      */
-    public static FileResource asFileResource(FileProvider fileProvider) {
+    public static FileResource asFileResource(final FileProvider fileProvider) {
         if (fileProvider instanceof FileResource || fileProvider == null) {
             return (FileResource) fileProvider;
         }
-        FileResource result = new FileResource(fileProvider.getFile());
+        final FileResource result = new FileResource(fileProvider.getFile());
         result.setProject(Project.getProject(fileProvider));
         return result;
     }
@@ -681,9 +570,9 @@ public class ResourceUtils {
     /**
      * Binary compares the contents of two Resources.
      * <p>
-     * simple but sub-optimal comparision algorithm. written for working
+     * simple but sub-optimal comparison algorithm. written for working
      * rather than fast. Better would be a block read into buffers followed
-     * by long comparisions apart from the final 1-7 bytes.
+     * by long comparisons apart from the final 1-7 bytes.
      * </p>
      *
      * @param r1 the Resource whose content is to be compared.
@@ -693,7 +582,7 @@ public class ResourceUtils {
      * @throws IOException if the Resources cannot be read.
      * @since Ant 1.7
      */
-    private static int binaryCompare(Resource r1, Resource r2) throws IOException {
+    private static int binaryCompare(final Resource r1, final Resource r2) throws IOException {
         InputStream in1 = null;
         InputStream in2 = null;
         try {
@@ -701,7 +590,7 @@ public class ResourceUtils {
             in2 = new BufferedInputStream(r2.getInputStream());
 
             for (int b1 = in1.read(); b1 != -1; b1 = in1.read()) {
-                int b2 = in2.read();
+                final int b2 = in2.read();
                 if (b1 != b2) {
                     return b1 > b2 ? 1 : -1;
                 }
@@ -723,7 +612,7 @@ public class ResourceUtils {
      * @throws IOException if the Resources cannot be read.
      * @since Ant 1.7
      */
-    private static int textCompare(Resource r1, Resource r2) throws IOException {
+    private static int textCompare(final Resource r1, final Resource r2) throws IOException {
         BufferedReader in1 = null;
         BufferedReader in2 = null;
         try {
@@ -732,7 +621,7 @@ public class ResourceUtils {
 
             String expected = in1.readLine();
             while (expected != null) {
-                String actual = in2.readLine();
+                final String actual = in2.readLine();
                 if (!expected.equals(actual)) {
                     if (actual == null) {
                         return 1;
@@ -755,34 +644,217 @@ public class ResourceUtils {
      * @param granularity the timestamp granularity to use.
      * @since Ant 1.7
      */
-    private static void logFuture(ProjectComponent logTo,
-                                  ResourceCollection rc, long granularity) {
-        long now = System.currentTimeMillis() + granularity;
-        Date sel = new Date();
+    private static void logFuture(final ProjectComponent logTo,
+                                  final ResourceCollection rc, final long granularity) {
+        final long now = System.currentTimeMillis() + granularity;
+        final Date sel = new Date();
         sel.setMillis(now);
         sel.setWhen(TimeComparison.AFTER);
-        Restrict future = new Restrict();
+        final Restrict future = new Restrict();
         future.add(sel);
         future.add(rc);
-        for (Resource r : future) {
+        for (final Resource r : future) {
             logTo.log("Warning: " + r.getName() + " modified in the future.", Project.MSG_WARN);
         }
     }
 
-    private static OutputStream getOutputStream(Resource resource, boolean append, Project project)
+    private static void copyWithFilterSets(final Resource source, final Resource dest,
+                                           final FilterSetCollection filters,
+                                           final Vector filterChains,
+                                           final boolean filterChainsAvailable,
+                                           final boolean append, final String inputEncoding,
+                                           final String outputEncoding,
+                                           final Project project)
+        throws IOException {
+        BufferedReader in = null;
+        BufferedWriter out = null;
+        try {
+            InputStreamReader isr = null;
+            if (inputEncoding == null) {
+                isr = new InputStreamReader(source.getInputStream());
+            } else {
+                isr = new InputStreamReader(source.getInputStream(),
+                                            inputEncoding);
+            }
+            in = new BufferedReader(isr);
+            final OutputStream os = getOutputStream(dest, append, project);
+            OutputStreamWriter osw;
+            if (outputEncoding == null) {
+                osw = new OutputStreamWriter(os);
+            } else {
+                osw = new OutputStreamWriter(os, outputEncoding);
+            }
+            out = new BufferedWriter(osw);
+            if (filterChainsAvailable) {
+                final ChainReaderHelper crh = new ChainReaderHelper();
+                crh.setBufferSize(FileUtils.BUF_SIZE);
+                crh.setPrimaryReader(in);
+                crh.setFilterChains(filterChains);
+                crh.setProject(project);
+                final Reader rdr = crh.getAssembledReader();
+                in = new BufferedReader(rdr);
+            }
+            final LineTokenizer lineTokenizer = new LineTokenizer();
+            lineTokenizer.setIncludeDelims(true);
+            String newline = null;
+            String line = lineTokenizer.getToken(in);
+            while (line != null) {
+                if (line.length() == 0) {
+                    // this should not happen, because the lines are
+                    // returned with the end of line delimiter
+                    out.newLine();
+                } else {
+                    newline = filters.replaceTokens(line);
+                    out.write(newline);
+                }
+                line = lineTokenizer.getToken(in);
+            }
+        } finally {
+            FileUtils.close(out);
+            FileUtils.close(in);
+        }
+    }
+
+    private static void copyWithFilterChainsOrTranscoding(final Resource source,
+                                                          final Resource dest,
+                                                          final Vector filterChains,
+                                                          final boolean filterChainsAvailable,
+                                                          final boolean append,
+                                                          final String inputEncoding,
+                                                          final String outputEncoding,
+                                                          final Project project)
+        throws IOException {
+        BufferedReader in = null;
+        BufferedWriter out = null;
+        try {
+            InputStreamReader isr = null;
+            if (inputEncoding == null) {
+                isr = new InputStreamReader(source.getInputStream());
+            } else {
+                isr = new InputStreamReader(source.getInputStream(),
+                                            inputEncoding);
+            }
+            in = new BufferedReader(isr);
+            final OutputStream os = getOutputStream(dest, append, project);
+            OutputStreamWriter osw;
+            if (outputEncoding == null) {
+                osw = new OutputStreamWriter(os);
+            } else {
+                osw = new OutputStreamWriter(os, outputEncoding);
+            }
+            out = new BufferedWriter(osw);
+            if (filterChainsAvailable) {
+                final ChainReaderHelper crh = new ChainReaderHelper();
+                crh.setBufferSize(FileUtils.BUF_SIZE);
+                crh.setPrimaryReader(in);
+                crh.setFilterChains(filterChains);
+                crh.setProject(project);
+                final Reader rdr = crh.getAssembledReader();
+                in = new BufferedReader(rdr);
+            }
+            final char[] buffer = new char[FileUtils.BUF_SIZE];
+            while (true) {
+                final int nRead = in.read(buffer, 0, buffer.length);
+                if (nRead == -1) {
+                    break;
+                }
+                out.write(buffer, 0, nRead);
+            }
+        } finally {
+            FileUtils.close(out);
+            FileUtils.close(in);
+        }
+    }
+
+    private static void copyUsingFileChannels(final File sourceFile,
+                                              final File destFile)
+        throws IOException {
+
+        final File parent = destFile.getParentFile();
+        if (parent != null && !parent.isDirectory()
+            && !(parent.mkdirs() || parent.isDirectory())) {
+            throw new IOException("failed to create the parent directory"
+                                  + " for " + destFile);
+        }
+
+        FileInputStream in = null;
+        FileOutputStream out = null;
+        FileChannel srcChannel = null;
+        FileChannel destChannel = null;
+
+        try {
+            in = new FileInputStream(sourceFile);
+            out = new FileOutputStream(destFile);
+
+            srcChannel = in.getChannel();
+            destChannel = out.getChannel();
+
+            long position = 0;
+            final long count = srcChannel.size();
+            while (position < count) {
+                final long chunk = Math.min(MAX_IO_CHUNK_SIZE, count - position);
+                position +=
+                    destChannel.transferFrom(srcChannel, position, chunk);
+            }
+        } finally {
+            FileUtils.close(srcChannel);
+            FileUtils.close(destChannel);
+            FileUtils.close(out);
+            FileUtils.close(in);
+        }
+    }
+
+    private static void copyUsingStreams(final Resource source, final Resource dest,
+                                         final boolean append, final Project project)
+        throws IOException {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = source.getInputStream();
+            out = getOutputStream(dest, append, project);
+
+            final byte[] buffer = new byte[FileUtils.BUF_SIZE];
+            int count = 0;
+            do {
+                out.write(buffer, 0, count);
+                count = in.read(buffer, 0, buffer.length);
+            } while (count != -1);
+        } finally {
+            FileUtils.close(out);
+            FileUtils.close(in);
+        }
+    }
+
+    private static OutputStream getOutputStream(final Resource resource, final boolean append, final Project project)
             throws IOException {
         if (append) {
-            Appendable a = resource.as(Appendable.class);
+            final Appendable a = resource.as(Appendable.class);
             if (a != null) {
                 return a.getAppendOutputStream();
             }
-            project.log("Appendable OutputStream not available for non-appendable resource "
-                    + resource + "; using plain OutputStream", Project.MSG_VERBOSE);
+            String msg = "Appendable OutputStream not available for non-appendable resource "
+                + resource + "; using plain OutputStream";
+            if (project != null) {
+                project.log(msg, Project.MSG_VERBOSE);
+            } else {
+                System.out.println(msg);
+            }
         }
         return resource.getOutputStream();
     }
 
-    public static interface ResourceSelectorProvider {
+    public interface ResourceSelectorProvider {
         ResourceSelector getTargetSelectorForSource(Resource source);
+    }
+
+    /**
+     * @since Ant 1.9.4
+     */
+    public static class ReadOnlyTargetFileException extends IOException {
+        private static final long serialVersionUID = 1L;
+
+        public ReadOnlyTargetFileException(final File destFile) {
+            super("can't write to read-only destination file " + destFile);
+        }
     }
 }

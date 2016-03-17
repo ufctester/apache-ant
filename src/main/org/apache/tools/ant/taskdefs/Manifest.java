@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Vector;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.util.CollectionUtils;
 import org.apache.tools.ant.util.FileUtils;
@@ -165,6 +166,7 @@ public class Manifest {
          * @see java.lang.Object#hashCode
          * @return a hashcode based on the key and values.
          */
+        @Override
         public int hashCode() {
             int hashCode = 0;
 
@@ -181,6 +183,7 @@ public class Manifest {
          * @see java.lang.Object#equals
          * @return true if the key and values are the same.
          */
+        @Override
         public boolean equals(Object rhs) {
             if (rhs == null || rhs.getClass() != getClass()) {
                 return false;
@@ -311,7 +314,7 @@ public class Manifest {
          * @param line the continuation line.
          */
         public void addContinuation(String line) {
-            String currentValue = (String) values.elementAt(currentIndex);
+            String currentValue = values.elementAt(currentIndex);
             setValue(currentValue + line.substring(1));
         }
 
@@ -534,7 +537,7 @@ public class Manifest {
                     Attribute currentCp = getAttribute(ATTRIBUTE_CLASSPATH);
                     if (currentCp != null) {
                         for (Enumeration<String> attribEnum = currentCp.getValues();
-                             attribEnum.hasMoreElements(); ) {
+                             attribEnum.hasMoreElements();) {
                             String value = attribEnum.nextElement();
                             classpathAttribute.addValue(value);
                         }
@@ -597,7 +600,7 @@ public class Manifest {
          *         instances.
          */
         public Attribute getAttribute(String attributeName) {
-            return (Attribute) attributes.get(attributeName.toLowerCase(Locale.ENGLISH));
+            return attributes.get(attributeName.toLowerCase(Locale.ENGLISH));
         }
 
         /**
@@ -685,7 +688,7 @@ public class Manifest {
                 // classpath attributes go into a vector
                 if (attributeKey.equals(ATTRIBUTE_CLASSPATH_LC)) {
                     Attribute classpathAttribute =
-                        (Attribute) attributes.get(attributeKey);
+                        attributes.get(attributeKey);
 
                     if (classpathAttribute == null) {
                         storeAttribute(attribute);
@@ -717,6 +720,7 @@ public class Manifest {
          * @return the cloned Section
          * @since Ant 1.5.2
          */
+        @Override
         public Object clone() {
             Section cloned = new Section();
             cloned.setName(name);
@@ -756,6 +760,7 @@ public class Manifest {
          * @see java.lang.Object#hashCode
          * @return a hash value based on the attributes.
          */
+        @Override
         public int hashCode() {
             return attributes.hashCode();
         }
@@ -765,6 +770,7 @@ public class Manifest {
          * @param rhs the object to check for equality.
          * @return true if the attributes are the same.
          */
+        @Override
         public boolean equals(Object rhs) {
             if (rhs == null || rhs.getClass() != getClass()) {
                 return false;
@@ -1054,6 +1060,7 @@ public class Manifest {
      * @return a multiline string with the Manifest as it
      *         appears in a Manifest file.
      */
+    @Override
     public String toString() {
         StringWriter sw = new StringWriter();
         try {
@@ -1092,6 +1099,7 @@ public class Manifest {
      * @see java.lang.Object#hashCode
      * @return a hashcode based on the version, main and sections.
      */
+    @Override
     public int hashCode() {
         int hashCode = 0;
 
@@ -1109,6 +1117,7 @@ public class Manifest {
      * @param rhs the object to check for equality.
      * @return true if the version, main and sections are the same.
      */
+    @Override
     public boolean equals(Object rhs) {
         if (rhs == null || rhs.getClass() != getClass()) {
             return false;
@@ -1160,7 +1169,7 @@ public class Manifest {
      * does not exist in the manifest
      */
     public Section getSection(String name) {
-        return (Section) sections.get(name);
+        return sections.get(name);
     }
 
     /**

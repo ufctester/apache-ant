@@ -316,6 +316,7 @@ public class ComponentHelper  {
     public void initDefaultDefinitions() {
         initTasks();
         initTypes();
+        new DefaultDefinitions(this).execute();
     }
 
     /**
@@ -1016,7 +1017,7 @@ public class ComponentHelper  {
      * Print unknown definition.forking
      */
     private void printUnknownDefinition(PrintWriter out, String componentName, String dirListing) {
-        boolean isAntlib = componentName.indexOf(MagicNames.ANTLIB_PREFIX) == 0;
+        boolean isAntlib = componentName.startsWith(MagicNames.ANTLIB_PREFIX);
         String uri = ProjectHelper.extractUriFromComponentName(componentName);
         out.println("Cause: The name is undefined.");
         out.println("Action: Check the spelling.");

@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+
 import org.apache.tools.ant.AntClassLoader;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -154,7 +155,7 @@ public class ExecuteJava implements Runnable, TimeoutObserver {
                 thread = new Thread(this, "ExecuteJava");
                 Task currentThreadTask
                     = project.getThreadTask(Thread.currentThread());
-                // XXX is the following really necessary? it is in the same thread group...
+                // TODO is the following really necessary? it is in the same thread group...
                 project.registerThreadTask(thread, currentThreadTask);
                 // if we run into a timeout, the run-away thread shall not
                 // make the VM run forever - if no timeout occurs, Ant's
@@ -188,7 +189,7 @@ public class ExecuteJava implements Runnable, TimeoutObserver {
         } catch (SecurityException e) {
             throw e;
         } catch (ThreadDeath e) {
-            // XXX could perhaps also call thread.stop(); not sure if anyone cares
+            // TODO could perhaps also call thread.stop(); not sure if anyone cares
             throw e;
         } catch (Throwable e) {
             throw new BuildException(e);

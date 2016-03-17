@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -38,7 +39,7 @@ import org.apache.tools.ant.util.LoaderUtils;
  * <p>
  * Use the system property <code>ant.argument-processor.debug</code> to enable
  * the print of debug log.
- * 
+ *
  * @since 1.9
  */
 public class ArgumentProcessorRegistry {
@@ -74,7 +75,9 @@ public class ArgumentProcessorRegistry {
                 Enumeration<URL> resources = classLoader.getResources(SERVICE_ID);
                 while (resources.hasMoreElements()) {
                     URL resource = resources.nextElement();
-                    ArgumentProcessor processor = getProcessorByService(resource.openStream());
+                    URLConnection conn = resource.openConnection();
+                    conn.setUseCaches(false);
+                    ArgumentProcessor processor = getProcessorByService(conn.getInputStream());
                     registerArgumentProcessor(processor);
                 }
             }

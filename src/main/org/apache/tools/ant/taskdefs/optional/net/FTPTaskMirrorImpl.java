@@ -628,6 +628,7 @@ public class FTPTaskMirrorImpl implements FTPTaskMirror {
                                 && pcounter != icounter
                                 && target.equals(array[pcounter].getName())) {
                                 candidateFound = false;
+                                break;
                             }
                         }
                         if (candidateFound) {
@@ -810,7 +811,7 @@ public class FTPTaskMirrorImpl implements FTPTaskMirror {
              */
             public String getFastRelativePath() {
                 String absPath = getAbsolutePath();
-                if (absPath.indexOf(rootPath + task.getSeparator()) == 0) {
+                if (absPath.startsWith(rootPath + task.getSeparator())) {
                     return absPath.substring(rootPath.length()
                                              + task.getSeparator().length());
                 }
@@ -843,7 +844,7 @@ public class FTPTaskMirrorImpl implements FTPTaskMirror {
                 return relativePath;
             }
             /**
-             * get thge relative path of this file
+             * get the relative path of this file
              * @param currentPath          base path
              * @param currentRelativePath  relative path of the base path with regards to remote dir
              * @return relative path
@@ -1358,7 +1359,7 @@ public class FTPTaskMirrorImpl implements FTPTaskMirror {
                 ftp.deleteFile(ftpFiles[0].getName());
             }
             // delegate the deletion of the local temp file to the delete task
-            // because of race conditions occuring on Windows
+            // because of race conditions occurring on Windows
             Delete mydelete = new Delete();
             mydelete.bindToOwner(task);
             mydelete.setFile(tempFile.getCanonicalFile());
@@ -1523,7 +1524,7 @@ public class FTPTaskMirrorImpl implements FTPTaskMirror {
         InputStream instream = null;
 
         try {
-            // XXX - why not simply new File(dir, filename)?
+            // TODO - why not simply new File(dir, filename)?
             File file = task.getProject().resolveFile(new File(dir, filename).getPath());
 
             if (task.isNewer() && isUpToDate(ftp, file, resolveFile(filename))) {
@@ -1757,13 +1758,13 @@ public class FTPTaskMirrorImpl implements FTPTaskMirror {
         throws IOException, BuildException {
         String workingDirectory = ftp.printWorkingDirectory();
         if (task.isVerbose()) {
-            if (dir.indexOf("/") == 0 || workingDirectory == null) {
+            if (dir.startsWith("/") || workingDirectory == null) {
                 task.log("Creating directory: " + dir + " in /");
             } else {
                 task.log("Creating directory: " + dir + " in " + workingDirectory);
             }
         }
-        if (dir.indexOf("/") == 0) {
+        if (dir.startsWith("/")) {
             ftp.changeWorkingDirectory("/");
         }
         String subdir = "";

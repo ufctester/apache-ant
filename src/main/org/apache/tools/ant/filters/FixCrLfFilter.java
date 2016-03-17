@@ -19,6 +19,7 @@ package org.apache.tools.ant.filters;
 
 import java.io.IOException;
 import java.io.Reader;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.condition.Os;
 import org.apache.tools.ant.types.EnumeratedAttribute;
@@ -342,7 +343,7 @@ public final class FixCrLfFilter extends BaseParamFilterReader implements Chaina
     /**
      * Indicate whether this stream contains Java source.
      *
-     * This attribute is only used in assocation with the &quot;<i><b>tab</b></i>&quot;
+     * This attribute is only used in association with the &quot;<i><b>tab</b></i>&quot;
      * attribute.
      *
      * @param javafiles

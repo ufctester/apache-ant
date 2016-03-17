@@ -19,24 +19,21 @@ package org.apache.tools.ant.taskdefs;
 
 import java.io.File;
 import java.io.IOException;
-
-import java.util.Vector;
 import java.util.Enumeration;
+import java.util.Vector;
 
-import org.apache.tools.ant.Main;
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.BuildException;
-
-import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.Main;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
+import org.apache.tools.ant.taskdefs.Ant.TargetElement;
 import org.apache.tools.ant.types.DirSet;
-import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.FileList;
+import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
 import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.ResourceCollection;
-
-import org.apache.tools.ant.taskdefs.Ant.TargetElement;
 
 
 /**
@@ -87,7 +84,7 @@ public class SubAnt extends Task {
      * <p>
      * This function may be overrided by providers of custom ProjectHelper so they can implement easily their sub
      * launcher.
-     * 
+     *
      * @return the name of the default file
      * @since Ant 1.8.0
      */
@@ -101,6 +98,7 @@ public class SubAnt extends Task {
      * @param output a line of output
      * @since Ant 1.6.2
      */
+    @Override
     public void handleOutput(String output) {
         if (ant != null) {
             ant.handleOutput(output);
@@ -124,6 +122,7 @@ public class SubAnt extends Task {
      *
      * @since Ant 1.6.2
      */
+    @Override
     public int handleInput(byte[] buffer, int offset, int length)
         throws IOException {
         if (ant != null) {
@@ -140,6 +139,7 @@ public class SubAnt extends Task {
      *
      * @since Ant 1.6.2
      */
+    @Override
     public void handleFlush(String output) {
         if (ant != null) {
             ant.handleFlush(output);
@@ -155,6 +155,7 @@ public class SubAnt extends Task {
      *
      * @since Ant 1.6.2
      */
+    @Override
     public void handleErrorOutput(String output) {
         if (ant != null) {
             ant.handleErrorOutput(output);
@@ -170,6 +171,7 @@ public class SubAnt extends Task {
      *
      * @since Ant 1.6.2
      */
+    @Override
     public void handleErrorFlush(String output) {
         if (ant != null) {
             ant.handleErrorFlush(output);
@@ -181,6 +183,7 @@ public class SubAnt extends Task {
     /**
      * Runs the various sub-builds.
      */
+    @Override
     public void execute() {
         if (buildpath == null) {
             throw new BuildException("No buildpath specified");
@@ -300,6 +303,9 @@ public class SubAnt extends Task {
         }
 
         try {
+            if (verbose) {
+                log("Executing: " + antfilename, Project.MSG_INFO);
+            }
             ant.execute();
         } catch (BuildException e) {
             if (failOnError || isHardError(e)) {
@@ -320,6 +326,7 @@ public class SubAnt extends Task {
             ant = null;
         }
     }
+
     /** whether we should even try to continue after this error */
     private boolean isHardError(Throwable t) {
         if (t instanceof BuildException) {

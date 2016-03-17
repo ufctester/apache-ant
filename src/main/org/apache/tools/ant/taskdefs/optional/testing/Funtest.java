@@ -18,16 +18,16 @@
 
 package org.apache.tools.ant.taskdefs.optional.testing;
 
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
 import org.apache.tools.ant.TaskAdapter;
-import org.apache.tools.ant.util.WorkerAnt;
-import org.apache.tools.ant.taskdefs.condition.Condition;
-import org.apache.tools.ant.taskdefs.condition.ConditionBase;
 import org.apache.tools.ant.taskdefs.Parallel;
 import org.apache.tools.ant.taskdefs.Sequential;
 import org.apache.tools.ant.taskdefs.WaitFor;
+import org.apache.tools.ant.taskdefs.condition.Condition;
+import org.apache.tools.ant.taskdefs.condition.ConditionBase;
+import org.apache.tools.ant.util.WorkerAnt;
 
 /**
  * Task to provide functional testing under Ant, with a fairly complex workflow of:
@@ -385,7 +385,7 @@ public class Funtest extends Task {
 
     /**
      * Run the functional test sequence.
-     * <p/>
+     * <p>
      * This is a fairly complex workflow -what is going on is that we try to clean up
      * no matter how the run ended, and to retain the innermost exception that got thrown
      * during cleanup. That is, if teardown fails after the tests themselves failed, it is the

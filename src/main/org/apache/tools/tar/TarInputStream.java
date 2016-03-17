@@ -303,31 +303,25 @@ public class TarInputStream extends FilterInputStream {
         entryOffset = 0;
         entrySize = currEntry.getSize();
 
-        if (currEntry.isGNULongNameEntry()) {
-            // read in the name
-            ByteArrayOutputStream longName = new ByteArrayOutputStream();
-            int length = 0;
-            while ((length = read(SMALL_BUF)) >= 0) {
-                longName.write(SMALL_BUF, 0, length);
-            }
-            getNextEntry();
-            if (currEntry == null) {
+        if (currEntry.isGNULongLinkEntry()) {
+            byte[] longLinkData = getLongNameData();
+            if (longLinkData == null) {
                 // Bugzilla: 40334
-                // Malformed tar file - long entry name not followed by entry
+                // Malformed tar file - long link entry name not followed by
+                // entry
                 return null;
             }
-            byte[] longNameData = longName.toByteArray();
-            // remove trailing null terminator(s)
-            length = longNameData.length;
-            while (length > 0 && longNameData[length - 1] == 0) {
-                --length;
+            currEntry.setLinkName(encoding.decode(longLinkData));
+        }
+
+        if (currEntry.isGNULongNameEntry()) {
+            byte[] longNameData = getLongNameData();
+            if (longNameData == null) {
+                // Bugzilla: 40334
+                // Malformed tar file - long entry name not followed by
+                // entry
+                return null;
             }
-            if (length != longNameData.length) {
-                byte[] l = new byte[length];
-                System.arraycopy(longNameData, 0, l, 0, length);
-                longNameData = l;
-            }
-            
             currEntry.setName(encoding.decode(longNameData));
         }
 
@@ -345,6 +339,39 @@ public class TarInputStream extends FilterInputStream {
         // the correct value.
         entrySize = currEntry.getSize();
         return currEntry;
+    }
+
+    /**
+     * Get the next entry in this tar archive as longname data.
+     *
+     * @return The next entry in the archive as longname data, or null.
+     * @throws IOException on error
+     */
+    protected byte[] getLongNameData() throws IOException {
+        // read in the name
+        ByteArrayOutputStream longName = new ByteArrayOutputStream();
+        int length = 0;
+        while ((length = read(SMALL_BUF)) >= 0) {
+            longName.write(SMALL_BUF, 0, length);
+        }
+        getNextEntry();
+        if (currEntry == null) {
+            // Bugzilla: 40334
+            // Malformed tar file - long entry name not followed by entry
+            return null;
+        }
+        byte[] longNameData = longName.toByteArray();
+        // remove trailing null terminator(s)
+        length = longNameData.length;
+        while (length > 0 && longNameData[length - 1] == 0) {
+            --length;
+        }
+        if (length != longNameData.length) {
+            byte[] l = new byte[length];
+            System.arraycopy(longNameData, 0, l, 0, length);
+            longNameData = l;
+        }
+        return longNameData;
     }
 
     /**
@@ -404,18 +431,22 @@ public class TarInputStream extends FilterInputStream {
                         if (ch == '='){ // end of keyword
                             String keyword = coll.toString("UTF-8");
                             // Get rest of entry
-                            byte[] rest = new byte[len - read];
-                            int got = i.read(rest);
-                            if (got != len - read){
+                            final int restLen = len - read;
+                            byte[] rest = new byte[restLen];
+                            int got = 0;
+                            while (got < restLen && (ch = i.read()) != -1) {
+                                rest[got++] = (byte) ch;
+                            }
+                            if (got != restLen) {
                                 throw new IOException("Failed to read "
                                                       + "Paxheader. Expected "
-                                                      + (len - read)
+                                                      + restLen
                                                       + " bytes, read "
                                                       + got);
                             }
                             // Drop trailing NL
                             String value = new String(rest, 0,
-                                                      len - read - 1, "UTF-8");
+                                                      restLen - 1, "UTF-8");
                             headers.put(keyword, value);
                             break;
                         }
@@ -453,11 +484,11 @@ public class TarInputStream extends FilterInputStream {
             } else if ("linkpath".equals(key)){
                 currEntry.setLinkName(val);
             } else if ("gid".equals(key)){
-                currEntry.setGroupId(Integer.parseInt(val));
+                currEntry.setGroupId(Long.parseLong(val));
             } else if ("gname".equals(key)){
                 currEntry.setGroupName(val);
             } else if ("uid".equals(key)){
-                currEntry.setUserId(Integer.parseInt(val));
+                currEntry.setUserId(Long.parseLong(val));
             } else if ("uname".equals(key)){
                 currEntry.setUserName(val);
             } else if ("size".equals(key)){
@@ -475,10 +506,10 @@ public class TarInputStream extends FilterInputStream {
     /**
      * Adds the sparse chunks from the current entry to the sparse chunks,
      * including any additional sparse entries following the current entry.
-     * 
-     * @throws IOException on error 
-     * 
-     * @todo Sparse files get not yet really processed. 
+     *
+     * @throws IOException on error
+     *
+     * @todo Sparse files get not yet really processed.
      */
     private void readGNUSparse() throws IOException {
         /* we do not really process sparse files yet
@@ -512,7 +543,7 @@ public class TarInputStream extends FilterInputStream {
     @Override
     public int read() throws IOException {
         int num = read(oneBuf, 0, 1);
-        return num == -1 ? -1 : ((int) oneBuf[0]) & BYTE_MASK;
+        return num == -1 ? -1 : (oneBuf[0]) & BYTE_MASK;
     }
 
     /**

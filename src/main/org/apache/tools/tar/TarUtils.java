@@ -26,6 +26,7 @@ package org.apache.tools.tar;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+
 import org.apache.tools.zip.ZipEncoding;
 import org.apache.tools.zip.ZipEncodingHelper;
 
@@ -45,11 +46,11 @@ public class TarUtils {
      * Encapsulates the algorithms used up to Ant 1.8 as ZipEncoding.
      */
     static final ZipEncoding FALLBACK_ENCODING = new ZipEncoding() {
-            public boolean canEncode(String name) { return true; }
+            public boolean canEncode(final String name) { return true; }
 
-            public ByteBuffer encode(String name) {
+            public ByteBuffer encode(final String name) {
                 final int length = name.length();
-                byte[] buf = new byte[length];
+                final byte[] buf = new byte[length];
 
                 // copy until end of input or output is reached.
                 for (int i = 0; i < length; ++i) {
@@ -58,12 +59,12 @@ public class TarUtils {
                 return ByteBuffer.wrap(buf);
             }
 
-            public String decode(byte[] buffer) {
+            public String decode(final byte[] buffer) {
                 final int length = buffer.length;
-                StringBuffer result = new StringBuffer(length);
+                final StringBuilder result = new StringBuilder(length);
 
                 for (int i = 0; i < length; ++i) {
-                    byte b = buffer[i];
+                    final byte b = buffer[i];
                     if (b == 0) { // Trailing null
                         break;
                     }
@@ -121,19 +122,14 @@ public class TarUtils {
             }
         }
 
-        // Must have trailing NUL or space
-        byte trailer;
-        trailer = buffer[end-1];
-        if (trailer == 0 || trailer == ' '){
+        // Trim all trailing NULs and spaces.
+        // The ustar and POSIX tar specs require a trailing NUL or
+        // space but some implementations use the extra digit for big
+        // sizes/uids/gids ...
+        byte trailer = buffer[end - 1];
+        while (start < end && (trailer == 0 || trailer == ' ')) {
             end--;
-        } else {
-            throw new IllegalArgumentException(
-                    exceptionMessage(buffer, offset, length, end-1, trailer));
-        }
-        // May have additional NUL or space
-        trailer = buffer[end-1];
-        if (trailer == 0 || trailer == ' '){
-            end--;
+            trailer = buffer[end - 1];
         }
 
         for ( ;start < end; start++) {
@@ -150,7 +146,7 @@ public class TarUtils {
         return result;
     }
 
-    /** 
+    /**
      * Compute the value contained in a byte buffer.  If the most
      * significant bit of the first byte in the buffer is set, this
      * bit is ignored and the rest of the buffer is interpreted as a
@@ -195,7 +191,7 @@ public class TarUtils {
         if (negative) {
             // 2's complement
             val--;
-            val ^= ((long) Math.pow(2, (length - 1) * 8) - 1);
+            val ^= (long) Math.pow(2, (length - 1) * 8) - 1;
         }
         return negative ? -val : val;
     }
@@ -204,7 +200,7 @@ public class TarUtils {
                                               final int offset,
                                               final int length,
                                               final boolean negative) {
-        byte[] remainder = new byte[length - 1];
+        final byte[] remainder = new byte[length - 1];
         System.arraycopy(buffer, offset + 1, remainder, 0, length - 1);
         BigInteger val = new BigInteger(remainder);
         if (negative) {
@@ -235,9 +231,17 @@ public class TarUtils {
     }
 
     // Helper method to generate the exception message
-    private static String exceptionMessage(byte[] buffer, final int offset,
-            final int length, int current, final byte currentByte) {
-        String string = new String(buffer, offset, length); // TODO default charset?
+    private static String exceptionMessage(final byte[] buffer, final int offset,
+            final int length, final int current, final byte currentByte) {
+        // default charset is good enough for an exception message,
+        //
+        // the alternative was to modify parseOctal and
+        // parseOctalOrBinary to receive the ZipEncoding of the
+        // archive (deprecating the existing public methods, of
+        // course) and dealing with the fact that ZipEncoding#decode
+        // can throw an IOException which parseOctal* doesn't declare
+        String string = new String(buffer, offset, length);
+
         string=string.replaceAll("\0", "{NUL}"); // Replace NULs to allow string to be printed
         final String s = "Invalid byte "+currentByte+" at offset "+(current-offset)+" in '"+string+"' len="+length;
         return s;
@@ -253,13 +257,13 @@ public class TarUtils {
      * @param length The maximum number of bytes to parse.
      * @return The entry name.
      */
-    public static String parseName(byte[] buffer, final int offset, final int length) {
+    public static String parseName(final byte[] buffer, final int offset, final int length) {
         try {
             return parseName(buffer, offset, length, DEFAULT_ENCODING);
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             try {
                 return parseName(buffer, offset, length, FALLBACK_ENCODING);
-            } catch (IOException ex2) {
+            } catch (final IOException ex2) {
                 // impossible
                 throw new RuntimeException(ex2);
             }
@@ -277,7 +281,7 @@ public class TarUtils {
      * @param encoding name of the encoding to use for file names
      * @return The entry name.
      */
-    public static String parseName(byte[] buffer, final int offset,
+    public static String parseName(final byte[] buffer, final int offset,
                                    final int length,
                                    final ZipEncoding encoding)
         throws IOException {
@@ -289,7 +293,7 @@ public class TarUtils {
             }
         }
         if (len > 0) {
-            byte[] b = new byte[len];
+            final byte[] b = new byte[len];
             System.arraycopy(buffer, offset, b, 0, len);
             return encoding.decode(b);
         }
@@ -299,7 +303,7 @@ public class TarUtils {
     /**
      * Copy a name into a buffer.
      * Copies characters from the name into the buffer
-     * starting at the specified offset. 
+     * starting at the specified offset.
      * If the buffer is longer than the name, the buffer
      * is filled with trailing NULs.
      * If the name is longer than the buffer,
@@ -311,14 +315,14 @@ public class TarUtils {
      * @param length The maximum number of header bytes to copy.
      * @return The updated offset, i.e. offset + length
      */
-    public static int formatNameBytes(String name, byte[] buf, final int offset, final int length) {
+    public static int formatNameBytes(final String name, final byte[] buf, final int offset, final int length) {
         try {
             return formatNameBytes(name, buf, offset, length, DEFAULT_ENCODING);
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             try {
                 return formatNameBytes(name, buf, offset, length,
                                        FALLBACK_ENCODING);
-            } catch (IOException ex2) {
+            } catch (final IOException ex2) {
                 // impossible
                 throw new RuntimeException(ex2);
             }
@@ -328,7 +332,7 @@ public class TarUtils {
     /**
      * Copy a name into a buffer.
      * Copies characters from the name into the buffer
-     * starting at the specified offset. 
+     * starting at the specified offset.
      * If the buffer is longer than the name, the buffer
      * is filled with trailing NULs.
      * If the name is longer than the buffer,
@@ -341,7 +345,7 @@ public class TarUtils {
      * @param encoding name of the encoding to use for file names
      * @return The updated offset, i.e. offset + length
      */
-    public static int formatNameBytes(String name, byte[] buf, final int offset,
+    public static int formatNameBytes(final String name, final byte[] buf, final int offset,
                                       final int length,
                                       final ZipEncoding encoding)
         throws IOException {
@@ -363,14 +367,14 @@ public class TarUtils {
 
     /**
      * Fill buffer with unsigned octal number, padded with leading zeroes.
-     * 
+     *
      * @param value number to convert to octal - treated as unsigned
      * @param buffer destination buffer
      * @param offset starting offset in buffer
      * @param length length of buffer to fill
      * @throws IllegalArgumentException if the value will not fit in the buffer
      */
-    public static void formatUnsignedOctalString(final long value, byte[] buffer,
+    public static void formatUnsignedOctalString(final long value, final byte[] buffer,
             final int offset, final int length) {
         int remaining = length;
         remaining--;
@@ -401,7 +405,7 @@ public class TarUtils {
      * Uses {@link #formatUnsignedOctalString} to format
      * the value as an octal string with leading zeros.
      * The converted number is followed by space and NUL
-     * 
+     *
      * @param value The value to write
      * @param buf The buffer to receive the output
      * @param offset The starting offset into the buffer
@@ -409,7 +413,7 @@ public class TarUtils {
      * @return The updated offset, i.e offset+length
      * @throws IllegalArgumentException if the value (and trailer) will not fit in the buffer
      */
-    public static int formatOctalBytes(final long value, byte[] buf, final int offset, final int length) {
+    public static int formatOctalBytes(final long value, final byte[] buf, final int offset, final int length) {
 
         int idx=length-2; // For space and trailing null
         formatUnsignedOctalString(value, buf, offset, idx);
@@ -422,11 +426,11 @@ public class TarUtils {
 
     /**
      * Write an octal long integer into a buffer.
-     * 
+     *
      * Uses {@link #formatUnsignedOctalString} to format
      * the value as an octal string with leading zeros.
      * The converted number is followed by a space.
-     * 
+     *
      * @param value The value to write as octal
      * @param buf The destinationbuffer.
      * @param offset The starting offset into the buffer.
@@ -434,9 +438,9 @@ public class TarUtils {
      * @return The updated offset
      * @throws IllegalArgumentException if the value (and trailer) will not fit in the buffer
      */
-    public static int formatLongOctalBytes(final long value, byte[] buf, final int offset, final int length) {
+    public static int formatLongOctalBytes(final long value, final byte[] buf, final int offset, final int length) {
 
-        int idx=length-1; // For space
+        final int idx=length-1; // For space
 
         formatUnsignedOctalString(value, buf, offset, idx);
         buf[offset + idx] = (byte) ' '; // Trailing space
@@ -447,11 +451,11 @@ public class TarUtils {
     /**
      * Write an long integer into a buffer as an octal string if this
      * will fit, or as a binary number otherwise.
-     * 
+     *
      * Uses {@link #formatUnsignedOctalString} to format
      * the value as an octal string with leading zeros.
      * The converted number is followed by a space.
-     * 
+     *
      * @param value The value to write into the buffer.
      * @param buf The destination buffer.
      * @param offset The starting offset into the buffer.
@@ -461,7 +465,7 @@ public class TarUtils {
      * will not fit in the buffer.
      */
     public static int formatLongOctalOrBinaryBytes(
-        final long value, byte[] buf, final int offset, final int length) {
+        final long value, final byte[] buf, final int offset, final int length) {
 
         // Check whether we are dealing with UID/GID or SIZE field
         final long maxAsOctalChar = length == TarConstants.UIDLEN ? TarConstants.MAXID : TarConstants.MAXSIZE;
@@ -480,11 +484,11 @@ public class TarUtils {
         return offset + length;
     }
 
-    private static void formatLongBinary(final long value, byte[] buf,
+    private static void formatLongBinary(final long value, final byte[] buf,
                                          final int offset, final int length,
                                          final boolean negative) {
         final int bits = (length - 1) * 8;
-        final long max = 1l << bits;
+        final long max = 1L << bits;
         long val = Math.abs(value);
         if (val >= max) {
             throw new IllegalArgumentException("Value " + value +
@@ -501,11 +505,11 @@ public class TarUtils {
         }
     }
 
-    private static void formatBigIntegerBinary(final long value, byte[] buf,
+    private static void formatBigIntegerBinary(final long value, final byte[] buf,
                                                final int offset,
                                                final int length,
                                                final boolean negative) {
-        BigInteger val = BigInteger.valueOf(value);
+        final BigInteger val = BigInteger.valueOf(value);
         final byte[] b = val.toByteArray();
         final int len = b.length;
         final int off = offset + length - len;
@@ -518,7 +522,7 @@ public class TarUtils {
 
     /**
      * Writes an octal value into a buffer.
-     * 
+     *
      * Uses {@link #formatUnsignedOctalString} to format
      * the value as an octal string with leading zeros.
      * The converted number is followed by NUL and then space.
@@ -530,7 +534,7 @@ public class TarUtils {
      * @return The updated value of offset, i.e. offset+length
      * @throws IllegalArgumentException if the value (and trailer) will not fit in the buffer
      */
-    public static int formatCheckSumOctalBytes(final long value, byte[] buf, final int offset, final int length) {
+    public static int formatCheckSumOctalBytes(final long value, final byte[] buf, final int offset, final int length) {
 
         int idx=length-2; // for NUL and space
         formatUnsignedOctalString(value, buf, offset, idx);
@@ -550,8 +554,8 @@ public class TarUtils {
     public static long computeCheckSum(final byte[] buf) {
         long sum = 0;
 
-        for (int i = 0; i < buf.length; ++i) {
-            sum += BYTE_MASK & buf[i];
+        for (final byte element : buf) {
+            sum += BYTE_MASK & element;
         }
 
         return sum;

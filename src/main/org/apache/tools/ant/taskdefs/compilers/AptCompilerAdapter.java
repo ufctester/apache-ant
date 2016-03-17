@@ -18,38 +18,38 @@
 
 package org.apache.tools.ant.taskdefs.compilers;
 
+import java.io.File;
+import java.lang.reflect.Method;
+import java.util.Enumeration;
+import java.util.Vector;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Apt;
 import org.apache.tools.ant.types.Commandline;
 import org.apache.tools.ant.types.Path;
 
-import java.io.File;
-import java.lang.reflect.Method;
-import java.util.Enumeration;
-import java.util.Vector;
-
 
 /**
- * The implementation of the apt compiler for JDK 1.5
- * <p/>
- * As usual, the low level entry points for Java tools are neither documented or
+ * <p>The implementation of the apt compiler for JDK 1.5.</p>
+ *
+ * <p>As usual, the low level entry points for Java tools are neither documented or
  * stable; this entry point may change from that of 1.5.0_01-b08 without any
- * warning at all. The IDE decompile of the tool entry points is as follows:
+ * warning at all. The IDE decompile of the tool entry points is as follows:</p>
  * <pre>
  * public class Main {
  * public Main() ;
- * <p/>
- * public static transient void main(String... strings) ;
- * <p/>
+ *
+ * public static transient void main(String... strings);
+ *
  * public static transient int process(String... strings);
- * <p/>
+ *
  * public static transient int process(PrintWriter printWriter,
- *      String... strings) ;
+ *      String... strings);
  * public static transient int process(
  *      AnnotationProcessorFactory annotationProcessorFactory,
- *      String... strings) ;
- * <p/>
+ *      String... strings);
+ *
  * public static transient int process(
  *      AnnotationProcessorFactory annotationProcessorFactory,
  *      PrintWriter printWriter,
@@ -64,8 +64,6 @@ import java.util.Vector;
  * This Adapter is designed to run Apt in-JVM, an option that is not actually
  * exposed to end-users, because it was too brittle during beta testing; classpath
  * problems being the core issue.
- *
- *
  *
  * @since Ant 1.7
  */
@@ -102,35 +100,35 @@ public class AptCompilerAdapter extends DefaultCompilerAdapter {
      * @param cmd command that is set up with the various switches from the task
      *            options
      */
-    static void setAptCommandlineSwitches(Apt apt, Commandline cmd) {
+    static void setAptCommandlineSwitches(final Apt apt, final Commandline cmd) {
 
         if (!apt.isCompile()) {
             cmd.createArgument().setValue("-nocompile");
         }
 
         // Process the factory class
-        String factory = apt.getFactory();
+        final String factory = apt.getFactory();
         if (factory != null) {
             cmd.createArgument().setValue("-factory");
             cmd.createArgument().setValue(factory);
         }
 
         // Process the factory path
-        Path factoryPath = apt.getFactoryPath();
+        final Path factoryPath = apt.getFactoryPath();
         if (factoryPath != null) {
             cmd.createArgument().setValue("-factorypath");
             cmd.createArgument().setPath(factoryPath);
         }
 
-        File preprocessDir = apt.getPreprocessDir();
+        final File preprocessDir = apt.getPreprocessDir();
         if (preprocessDir != null) {
             cmd.createArgument().setValue("-s");
             cmd.createArgument().setFile(preprocessDir);
         }
 
         // Process the processor options
-        Vector options = apt.getOptions();
-        Enumeration elements = options.elements();
+        final Vector options = apt.getOptions();
+        final Enumeration elements = options.elements();
         Apt.Option opt;
         StringBuffer arg = null;
         while (elements.hasMoreElements()) {
@@ -149,8 +147,8 @@ public class AptCompilerAdapter extends DefaultCompilerAdapter {
      *
      * @param cmd command line to set up
      */
-    protected void setAptCommandlineSwitches(Commandline cmd) {
-        Apt apt = getApt();
+    protected void setAptCommandlineSwitches(final Commandline cmd) {
+        final Apt apt = getApt();
         setAptCommandlineSwitches(apt, cmd);
     }
 
@@ -162,25 +160,25 @@ public class AptCompilerAdapter extends DefaultCompilerAdapter {
     public boolean execute() throws BuildException {
         attributes.log("Using apt compiler", Project.MSG_VERBOSE);
         //set up the javac options
-        Commandline cmd = setupModernJavacCommand();
+        final Commandline cmd = setupModernJavacCommand();
         //then add the Apt options
         setAptCommandlineSwitches(cmd);
 
         //finally invoke APT
         // Use reflection to be able to build on all JDKs:
         try {
-            Class c = Class.forName(APT_ENTRY_POINT);
-            Object compiler = c.newInstance();
-            Method compile = c.getMethod(APT_METHOD_NAME,
+            final Class c = Class.forName(APT_ENTRY_POINT);
+            final Object compiler = c.newInstance();
+            final Method compile = c.getMethod(APT_METHOD_NAME,
                     new Class[]{(new String[]{}).getClass()});
-            int result = ((Integer) compile.invoke
+            final int result = ((Integer) compile.invoke
                     (compiler, new Object[]{cmd.getArguments()}))
                     .intValue();
             return (result == APT_COMPILER_SUCCESS);
-        } catch (BuildException be) {
+        } catch (final BuildException be) {
             //rethrow build exceptions
             throw be;
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             //cast everything else to a build exception
             throw new BuildException("Error starting apt compiler",
                     ex, location);

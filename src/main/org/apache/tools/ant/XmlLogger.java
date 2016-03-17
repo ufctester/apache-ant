@@ -23,9 +23,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Stack;
-import java.util.Enumeration;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -176,14 +177,8 @@ public class XmlLogger implements BuildLogger {
             stacktrace.appendChild(errText);
             synchronizedAppend(buildElement.element, stacktrace);
         }
-        String outFilename = event.getProject().getProperty("XmlLogger.file");
-        if (outFilename == null) {
-            outFilename = "log.xml";
-        }
-        String xslUri = event.getProject().getProperty("ant.XmlLogger.stylesheet.uri");
-        if (xslUri == null) {
-            xslUri = "log.xsl";
-        }
+        String outFilename = getProperty(event, "XmlLogger.file", "log.xml");
+        String xslUri = getProperty(event, "ant.XmlLogger.stylesheet.uri", "log.xsl");
         Writer out = null;
         try {
             // specify output in UTF8 otherwise accented characters will blow
@@ -205,6 +200,14 @@ public class XmlLogger implements BuildLogger {
             FileUtils.close(out);
         }
         buildElement = null;
+    }
+
+    private String getProperty(BuildEvent event, String propertyName, String defaultValue) {
+        String rv = defaultValue;
+        if (event != null && event.getProject() != null && event.getProject().getProperty(propertyName) != null) {
+            rv = event.getProject().getProperty(propertyName);
+        }
+        return rv;
     }
 
     /**
@@ -251,7 +254,7 @@ public class XmlLogger implements BuildLogger {
      */
     public void targetFinished(BuildEvent event) {
         Target target = event.getTarget();
-        TimedElement targetElement = (TimedElement) targets.get(target);
+        TimedElement targetElement = targets.get(target);
         if (targetElement != null) {
             long totalTime = System.currentTimeMillis() - targetElement.startTime;
             targetElement.element.setAttribute(TIME_ATTR, DefaultLogger.formatTime(totalTime));
@@ -265,7 +268,7 @@ public class XmlLogger implements BuildLogger {
                             + " finished target element = " + targetElement);
                 }
                 if (!threadStack.empty()) {
-                    parentElement = (TimedElement) threadStack.peek();
+                    parentElement = threadStack.peek();
                 }
             }
             if (parentElement == null) {
@@ -311,7 +314,7 @@ public class XmlLogger implements BuildLogger {
      */
     public void taskFinished(BuildEvent event) {
         Task task = event.getTask();
-        TimedElement taskElement = (TimedElement) tasks.get(task);
+        TimedElement taskElement = tasks.get(task);
         if (taskElement == null) {
             throw new RuntimeException("Unknown task " + task + " not in " + tasks);
         }
@@ -320,7 +323,7 @@ public class XmlLogger implements BuildLogger {
         Target target = task.getOwningTarget();
         TimedElement targetElement = null;
         if (target != null) {
-            targetElement = (TimedElement) targets.get(target);
+            targetElement = targets.get(target);
         }
         if (targetElement == null) {
             synchronizedAppend(buildElement.element, taskElement.element);
@@ -345,7 +348,7 @@ public class XmlLogger implements BuildLogger {
      * may be hiding the real task
      */
     private TimedElement getTaskElement(Task task) {
-        TimedElement element = (TimedElement) tasks.get(task);
+        TimedElement element = tasks.get(task);
         if (element != null) {
             return element;
         }
@@ -353,7 +356,7 @@ public class XmlLogger implements BuildLogger {
             Task key = e.nextElement();
             if (key instanceof UnknownElement) {
                 if (((UnknownElement) key).getTask() == task) {
-                    return (TimedElement) tasks.get(key);
+                    return tasks.get(key);
                 }
             }
         }
@@ -411,7 +414,7 @@ public class XmlLogger implements BuildLogger {
             parentElement = getTaskElement(task);
         }
         if (parentElement == null && target != null) {
-            parentElement = (TimedElement) targets.get(target);
+            parentElement = targets.get(target);
         }
         if (parentElement != null) {
             synchronizedAppend(parentElement.element, messageElement);

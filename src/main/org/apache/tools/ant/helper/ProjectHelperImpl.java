@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.IntrospectionHelper;
 import org.apache.tools.ant.Location;
@@ -31,8 +32,8 @@ import org.apache.tools.ant.ProjectHelper;
 import org.apache.tools.ant.RuntimeConfigurable;
 import org.apache.tools.ant.Target;
 import org.apache.tools.ant.Task;
-import org.apache.tools.ant.TypeAdapter;
 import org.apache.tools.ant.TaskContainer;
+import org.apache.tools.ant.TypeAdapter;
 import org.apache.tools.ant.UnknownElement;
 import org.apache.tools.ant.util.FileUtils;
 import org.apache.tools.ant.util.JAXPUtils;
@@ -727,7 +728,7 @@ public class ProjectHelperImpl extends ProjectHelper {
             if (task == null) {
                 task = new UnknownElement(tag);
                 task.setProject(helperImpl.project);
-                //XXX task.setTaskType(tag);
+                //TODO task.setTaskType(tag);
                 task.setTaskName(tag);
             }
             task.setLocation(new Location(helperImpl.locator));

@@ -24,12 +24,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+
 import javax.swing.ImageIcon;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
-import org.apache.tools.ant.util.Base64Converter;
 import org.apache.tools.ant.taskdefs.optional.net.SetProxy;
+import org.apache.tools.ant.util.Base64Converter;
 
 /**
  * Creates a splash screen. The splash screen is displayed
@@ -69,6 +71,7 @@ public class SplashTask extends Task {
      * @deprecated since 1.5.x.
      *             Use org.apache.tools.ant.taskdefs.optional.net.SetProxy
      */
+    @Deprecated
     public void setUseproxy(boolean useProxy) {
         this.useProxy = useProxy;
     }
@@ -79,6 +82,7 @@ public class SplashTask extends Task {
      * @deprecated since 1.5.x.
      *             Use org.apache.tools.ant.taskdefs.optional.net.SetProxy
      */
+    @Deprecated
     public void setProxy(String proxy) {
         this.proxy = proxy;
     }
@@ -89,6 +93,7 @@ public class SplashTask extends Task {
      * @deprecated since 1.5.x.
      *             Use org.apache.tools.ant.taskdefs.optional.net.SetProxy
      */
+    @Deprecated
     public void setPort(String port) {
         this.port = port;
     }
@@ -99,6 +104,7 @@ public class SplashTask extends Task {
      * @deprecated since 1.5.x.
      *             Use org.apache.tools.ant.taskdefs.optional.net.SetProxy
      */
+    @Deprecated
     public void setUser(String user) {
         this.user = user;
     }
@@ -109,6 +115,7 @@ public class SplashTask extends Task {
      * @deprecated since 1.5.x.
      *             Use org.apache.tools.ant.taskdefs.optional.net.SetProxy
      */
+    @Deprecated
     public void setPassword(String password) {
         this.password = password;
     }
@@ -138,7 +145,7 @@ public class SplashTask extends Task {
 
     /**
      * Sets the display text presented in the splash window.
-     * optional; defaults to "Building ..." 
+     * optional; defaults to "Building ..."
      * @param displayText the display text presented the splash window
      * @since Ant 1.8.0
      */
@@ -150,6 +157,7 @@ public class SplashTask extends Task {
      * Execute the task.
      * @throws BuildException on error
      */
+    @Override
     public void execute() throws BuildException {
         if (splash != null) {
             splash.setVisible(false);

@@ -33,6 +33,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
@@ -214,7 +215,7 @@ public class Replace extends MatchingTask {
         }
 
         /**
-         * The replacement string; required if <code>property<code>
+         * The replacement string; required if <code>property</code>
          * is not set.
          * @param value <code>String</code> value to replace.
          */
@@ -481,7 +482,7 @@ public class Replace extends MatchingTask {
 
     /**
      * Do the execution.
-     * @throws BuildException if we cant build
+     * @throws BuildException if we can't build
      */
     public void execute() throws BuildException {
 

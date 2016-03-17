@@ -17,9 +17,9 @@
  */
 package org.apache.tools.ant.util.regexp;
 
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.MagicNames;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.MagicNames;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.util.ClasspathUtils;
 
 /**
@@ -63,7 +63,7 @@ public class RegexpMatcherFactory {
 
         if (systemDefault != null) {
             return createInstance(systemDefault);
-            // XXX     should we silently catch possible exceptions and try to
+            // TODO     should we silently catch possible exceptions and try to
             //         load a different implementation?
         }
 
@@ -104,7 +104,7 @@ public class RegexpMatcherFactory {
     public static boolean regexpMatcherPresent(Project project) {
         try {
             // The factory throws a BuildException if no usable matcher
-            // cant be instantiated. We dont need the matcher itself here.
+            // cannot be instantiated. We dont need the matcher itself here.
             new RegexpMatcherFactory().newRegexpMatcher(project);
             return true;
         } catch (Throwable ex) {

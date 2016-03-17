@@ -21,6 +21,7 @@ package org.apache.tools.ant.taskdefs.optional.sound;
 // ant includes
 import java.io.File;
 import java.io.IOException;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -31,6 +32,7 @@ import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+
 import org.apache.tools.ant.BuildEvent;
 import org.apache.tools.ant.BuildListener;
 import org.apache.tools.ant.Project;
@@ -196,7 +198,7 @@ public class AntSoundPlayer implements LineListener, BuildListener {
      */
     public void buildFinished(BuildEvent event) {
         if (event.getException() == null && fileSuccess != null) {
-            // build successfull!
+            // build successful!
             play(event.getProject(), fileSuccess, loopsSuccess, durationSuccess);
         } else if (event.getException() != null && fileFail != null) {
             play(event.getProject(), fileFail, loopsFail, durationFail);

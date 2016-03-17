@@ -727,6 +727,7 @@ public class FTP extends Task implements FTPTaskConfig {
                                 && pcounter != icounter
                                 && target.equals(array[pcounter].getName())) {
                                 candidateFound = false;
+                                break;
                             }
                         }
                         if (candidateFound) {
@@ -908,7 +909,7 @@ public class FTP extends Task implements FTPTaskConfig {
              */
             public String getFastRelativePath() {
                 String absPath = getAbsolutePath();
-                if (absPath.indexOf(rootPath + remoteFileSep) == 0) {
+                if (absPath.startsWith(rootPath + remoteFileSep)) {
                     return absPath.substring(rootPath.length() + remoteFileSep.length());
                 }
                 return null;
@@ -940,7 +941,7 @@ public class FTP extends Task implements FTPTaskConfig {
                 return relativePath;
             }
             /**
-             * get thge relative path of this file
+             * get the relative path of this file
              * @param currentPath          base path
              * @param currentRelativePath  relative path of the base path with regards to remote dir
              * @return relative path
@@ -1969,7 +1970,7 @@ public class FTP extends Task implements FTPTaskConfig {
                 ftp.deleteFile(ftpFiles[0].getName());
             }
             // delegate the deletion of the local temp file to the delete task
-            // because of race conditions occuring on Windows
+            // because of race conditions occurring on Windows
             Delete mydelete = new Delete();
             mydelete.bindToOwner(this);
             mydelete.setFile(tempFile.getCanonicalFile());
@@ -2136,7 +2137,7 @@ public class FTP extends Task implements FTPTaskConfig {
         InputStream instream = null;
 
         try {
-            // XXX - why not simply new File(dir, filename)?
+            // TODO - why not simply new File(dir, filename)?
             File file = getProject().resolveFile(new File(dir, filename).getPath());
 
             if (newerOnly && isUpToDate(ftp, file, resolveFile(filename))) {
@@ -2356,13 +2357,13 @@ public class FTP extends Task implements FTPTaskConfig {
         throws IOException, BuildException {
         String workingDirectory = ftp.printWorkingDirectory();
         if (verbose) {
-            if (dir.indexOf("/") == 0 || workingDirectory == null) {
+            if (dir.startsWith("/") || workingDirectory == null) {
                 log("Creating directory: " + dir + " in /");
             } else {
                 log("Creating directory: " + dir + " in " + workingDirectory);
             }
         }
-        if (dir.indexOf("/") == 0) {
+        if (dir.startsWith("/")) {
             ftp.changeWorkingDirectory("/");
         }
         String subdir = "";

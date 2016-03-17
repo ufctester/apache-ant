@@ -18,21 +18,22 @@
 package org.apache.tools.ant.taskdefs;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
-import java.util.ArrayList;
 import java.util.StringTokenizer;
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.Project;
+import java.util.Vector;
+
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
 import org.apache.tools.ant.taskdefs.condition.Os;
-import org.apache.tools.ant.types.Path;
-import org.apache.tools.ant.types.Mapper;
-import org.apache.tools.ant.types.Reference;
-import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.EnumeratedAttribute;
+import org.apache.tools.ant.types.Mapper;
+import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.types.Reference;
 import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.ResourceCollection;
 import org.apache.tools.ant.types.resources.Resources;
 import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileNameMapper;
@@ -167,6 +168,7 @@ public class PathConvert extends Task {
         /**
          * @return the list of values for this enumerated attribute.
          */
+        @Override
         public String[] getValues() {
             return new String[]{"windows", "unix", "netware", "os/2", "tandem"};
         }
@@ -224,6 +226,7 @@ public class PathConvert extends Task {
      *             Use the method taking a TargetOs argument instead.
      * @see #setTargetos(PathConvert.TargetOs)
      */
+    @Deprecated
     public void setTargetos(String target) {
         TargetOs to = new TargetOs();
         to.setValue(target);
@@ -330,6 +333,7 @@ public class PathConvert extends Task {
      * Do the execution.
      * @throws BuildException if something is invalid.
      */
+    @Override
     public void execute() throws BuildException {
         Resources savedPath = path;
         String savedPathSep = pathSep; // may be altered in validateSetup
@@ -369,7 +373,7 @@ public class PathConvert extends Task {
                 }
             }
             boolean first = true;
-            for (Iterator mappedIter = ret.iterator(); mappedIter.hasNext(); ) {
+            for (Iterator mappedIter = ret.iterator(); mappedIter.hasNext();) {
                 String elem = mapElement((String) mappedIter.next()); // Apply the path prefix map
 
                 // Now convert the path and file separator characters from the

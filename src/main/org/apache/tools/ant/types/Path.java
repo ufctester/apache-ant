@@ -30,8 +30,8 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.MagicNames;
 import org.apache.tools.ant.PathTokenizer;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.types.resources.FileResourceIterator;
+import org.apache.tools.ant.types.resources.Union;
 import org.apache.tools.ant.util.FileUtils;
 import org.apache.tools.ant.util.JavaEnvUtils;
 
@@ -601,7 +601,7 @@ public class Path extends DataType implements Cloneable, ResourceCollection {
         }
 
         if (System.getProperty("java.vendor").toLowerCase(Locale.ENGLISH).indexOf("microsoft") >= 0) {
-            // XXX is this code still necessary? is there any 1.2+ port?
+            // TODO is this code still necessary? is there any 1.2+ port?
             // Pull in *.zip from packages directory
             FileSet msZipFiles = new FileSet();
             msZipFiles.setDir(new File(System.getProperty("java.home")

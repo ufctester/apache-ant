@@ -20,6 +20,7 @@ package org.apache.tools.ant.taskdefs.optional.extension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.jar.Manifest;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
@@ -201,7 +202,7 @@ public class JarLibResolveTask extends Task {
 
     /**
      * Check if specified file satisfies extension.
-     * If it does then set the relevent property
+     * If it does then set the relevant property
      * else throw a BuildException.
      *
      * @param file the candidate library

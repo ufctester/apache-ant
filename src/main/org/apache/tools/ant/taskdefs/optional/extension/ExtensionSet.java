@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Stack;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.DataType;
@@ -112,6 +113,7 @@ public class ExtensionSet
      * @param reference the reference to which this instance is associated
      * @exception BuildException if this instance already has been configured.
      */
+    @Override
     public void setRefid(final Reference reference)
         throws BuildException {
         if (!extensions.isEmpty() || !extensionsFilesets.isEmpty()) {
@@ -120,6 +122,7 @@ public class ExtensionSet
         super.setRefid(reference);
     }
 
+    @Override
     protected synchronized void dieOnCircularReference(Stack stk, Project p)
         throws BuildException {
         if (isChecked()) {
@@ -128,11 +131,11 @@ public class ExtensionSet
         if (isReference()) {
             super.dieOnCircularReference(stk, p);
         } else {
-            for (Iterator i = extensions.iterator(); i.hasNext(); ) {
+            for (Iterator i = extensions.iterator(); i.hasNext();) {
                 pushAndInvokeCircularReferenceCheck((ExtensionAdapter) i.next(),
                                                     stk, p);
             }
-            for (Iterator i = extensionsFilesets.iterator(); i.hasNext(); ) {
+            for (Iterator i = extensionsFilesets.iterator(); i.hasNext();) {
                 pushAndInvokeCircularReferenceCheck((FileSet) i.next(), stk, p);
             }
             setChecked(true);
@@ -143,6 +146,7 @@ public class ExtensionSet
      * @see java.lang.Object#toString()
      * @return the extensions in a string.
      */
+    @Override
     public String toString() {
         return "ExtensionSet" + Arrays.asList(toExtensions(getProject()));
     }

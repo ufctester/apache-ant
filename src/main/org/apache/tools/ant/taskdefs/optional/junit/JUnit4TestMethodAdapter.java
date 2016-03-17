@@ -20,8 +20,10 @@ package org.apache.tools.ant.taskdefs.optional.junit;
 
 import java.util.Iterator;
 import java.util.List;
+
 import junit.framework.Test;
 import junit.framework.TestResult;
+
 import org.junit.runner.Description;
 import org.junit.runner.Request;
 import org.junit.runner.Runner;
@@ -46,7 +48,7 @@ public class JUnit4TestMethodAdapter implements Test {
 
     /**
      * Creates a new adapter for the given class and a method within the class.
-     * 
+     *
      * @param testClass test class containing the method to be executed
      * @param methodNames names of the test methods that are to be executed
      * @exception  java.lang.IllegalArgumentException
@@ -70,7 +72,7 @@ public class JUnit4TestMethodAdapter implements Test {
             }
         }
         this.testClass = testClass;
-        this.methodNames = (String[]) methodNames.clone();
+        this.methodNames = methodNames.clone();
         this.cache = CustomJUnit4TestAdapterCache.getInstance();
 
         // Warning: If 'testClass' is an old-style (pre-JUnit-4) class,
@@ -105,6 +107,7 @@ public class JUnit4TestMethodAdapter implements Test {
         runner.run(cache.getNotifier(result));
     }
 
+    @Override
     public String toString() {
         String testClassName = testClass.getName();
         StringBuilder buf = new StringBuilder(testClassName.length()
@@ -142,6 +145,7 @@ public class JUnit4TestMethodAdapter implements Test {
             this.methodNames = methodNames;
         }
 
+        @Override
         public boolean shouldRun(Description description) {
             if (methodNames.length == 0) {
                 return false;
@@ -163,9 +167,10 @@ public class JUnit4TestMethodAdapter implements Test {
                     }
                 }
             }
-            return false;					
+            return false;
         }
 
+        @Override
         public String describe() {
             StringBuilder buf = new StringBuilder(40);
             if (methodNames.length == 0) {

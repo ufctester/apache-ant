@@ -20,7 +20,9 @@ package org.apache.tools.ant.taskdefs.optional;
 
 import java.io.PrintWriter;
 import java.util.TooManyListenersException;
+
 import javax.xml.transform.Transformer;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.XSLTProcess;
 import org.apache.xalan.trace.PrintTraceListener;
@@ -32,11 +34,11 @@ import org.apache.xalan.transformer.TransformerImpl;
  * @since Ant 1.8.0
  */
 public class Xalan2TraceSupport implements XSLTTraceSupport {
-    public void configureTrace(Transformer t,
-                               XSLTProcess.TraceConfiguration conf) {
+    public void configureTrace(final Transformer t,
+                               final XSLTProcess.TraceConfiguration conf) {
         if (t instanceof TransformerImpl && conf != null) {
-            PrintWriter w = new PrintWriter(conf.getOutputStream(), false);
-            PrintTraceListener tl = new PrintTraceListener(w);
+            final PrintWriter w = new PrintWriter(conf.getOutputStream(), false);
+            final PrintTraceListener tl = new PrintTraceListener(w);
             tl.m_traceElements = conf.getElements();
             tl.m_traceExtension = conf.getExtension();
             tl.m_traceGeneration = conf.getGeneration();
@@ -44,7 +46,7 @@ public class Xalan2TraceSupport implements XSLTTraceSupport {
             tl.m_traceTemplates = conf.getTemplates();
             try {
                 ((TransformerImpl) t).getTraceManager().addTraceListener(tl);
-            } catch (TooManyListenersException tml) {
+            } catch (final TooManyListenersException tml) {
                 throw new BuildException(tml);
             }
         }

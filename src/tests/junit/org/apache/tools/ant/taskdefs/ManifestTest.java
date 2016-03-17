@@ -26,17 +26,31 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.tools.ant.BuildFileTest;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.BuildFileRule;
 import org.apache.tools.ant.Project;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import static org.apache.tools.ant.AntAssert.assertContains;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Testcase for the Manifest class used in the jar task.
  *
  */
-public class ManifestTest extends BuildFileTest {
+public class ManifestTest {
 
-    public static final String EXPANDED_MANIFEST
-        = "src/etc/testcases/taskdefs/manifests/META-INF/MANIFEST.MF";
+    @Rule
+    public final BuildFileRule buildRule = new BuildFileRule();
+
+    private File expandedManifest;
+    private File outDir;
 
     public static final String LONG_LINE
         = "AReallyLongLineToTestLineBreakingInManifests-ACapabilityWhich" +
@@ -53,24 +67,26 @@ public class ManifestTest extends BuildFileTest {
 
     public static final String VALUE = "NOT_LONG";
 
-    public ManifestTest(String name) {
-        super(name);
-    }
 
+    @Before
     public void setUp() {
-        configureProject("src/etc/testcases/taskdefs/manifest.xml");
+        buildRule.configureProject("src/etc/testcases/taskdefs/manifest.xml");
+        outDir = new File(buildRule.getProject().getProperty("output"));
+        expandedManifest = new File(outDir, "manifests/META-INF/MANIFEST.MF");
     }
 
+    @After
     public void tearDown() {
-        executeTarget("clean");
+        buildRule.executeTarget("tearDown");
     }
 
     /**
      * Empty manifest - is OK
      */
+    @Test
     public void test1() throws ManifestException, IOException {
-        executeTarget("test1");
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        buildRule.executeTarget("test1");
+        Manifest manifest = getManifest(expandedManifest);
         String version = manifest.getManifestVersion();
         assertEquals("Manifest was not created with correct version - ", "1.0", version);
     }
@@ -78,9 +94,10 @@ public class ManifestTest extends BuildFileTest {
     /**
      * Simple Manifest with version 2.0
      */
+    @Test
     public void test2() throws ManifestException, IOException {
-        executeTarget("test2");
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        buildRule.executeTarget("test2");
+        Manifest manifest = getManifest(expandedManifest);
         String version = manifest.getManifestVersion();
         assertEquals("Manifest was not created with correct version - ", "2.0", version);
     }
@@ -88,25 +105,36 @@ public class ManifestTest extends BuildFileTest {
     /**
      * Malformed manifest - no : on the line
      */
+    @Test
     public void test3() {
-        expectBuildExceptionContaining("test3", "Manifest is invalid - no colon on header line",
-                                       "Invalid Manifest");
+        try {
+            buildRule.executeTarget("test3");
+            fail("BuildException expected: Manifest is invalid - no colon on header line");
+        } catch (BuildException ex) {
+            assertContains("Invalid Manifest", ex.getMessage());
+        }
     }
 
     /**
      * Malformed manifest - starts with continuation line
      */
+    @Test
     public void test4() {
-        expectBuildExceptionContaining("test4", "Manifest is invalid - section starts with continuation line",
-                                       "Invalid Manifest");
+        try {
+            buildRule.executeTarget("test4");
+            fail("BuildException expected: Manifest is invalid - section starts with continuation line");
+        } catch (BuildException ex) {
+            assertContains("Invalid Manifest", ex.getMessage());
+        }
    }
 
     /**
      * Malformed manifest - Name attribute in main section
      */
+    @Test
     public void test5() {
-        executeTarget("test5");
-        String output = getLog();
+        buildRule.executeTarget("test5");
+        String output = buildRule.getLog();
         boolean hasWarning = output.indexOf("Manifest warning: \"Name\" attributes should not occur in the main section") != -1;
         assertTrue("Expected warning about Name in main section", hasWarning);
     }
@@ -114,30 +142,38 @@ public class ManifestTest extends BuildFileTest {
     /**
      * New Section not starting with Name attribute.
      */
+    @Test
     public void test6() {
-        expectBuildExceptionContaining("test6", "Manifest is invalid - section starts with incorrect attribute",
-                                       "Invalid Manifest");
-        String output = getLog();
+        try {
+            buildRule.executeTarget("test6");
+            fail("BuildException expected: Manifest is invalid - section starts with incorrect attribute");
+        } catch (BuildException ex) {
+            assertContains("Invalid Manifest", ex.getMessage());
+        }
+        String output = buildRule.getLog();
         boolean hasWarning = output.indexOf("Manifest sections should start with a \"Name\" attribute") != -1;
         assertTrue("Expected warning about section not starting with Name: attribute", hasWarning);
     }
 
+
     /**
      * From attribute is illegal
      */
+    @Test
     public void test7() {
-        executeTarget("test7");
+        buildRule.executeTarget("test7");
 
-        boolean hasWarning = getLog().indexOf(Manifest.ERROR_FROM_FORBIDDEN) != -1;
+        boolean hasWarning = buildRule.getLog().indexOf(Manifest.ERROR_FROM_FORBIDDEN) != -1;
         assertTrue("Expected warning about From: attribute", hasWarning);
     }
 
     /**
      * Inline manifest - OK
      */
+    @Test
     public void test8() throws IOException, ManifestException {
-        executeTarget("test8");
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        buildRule.executeTarget("test8");
+        Manifest manifest = getManifest(expandedManifest);
         Manifest.Section mainSection = manifest.getMainSection();
         String classpath = mainSection.getAttributeValue("class-path");
         assertEquals("Class-Path attribute was not set correctly - ", "fubar", classpath);
@@ -150,49 +186,76 @@ public class ManifestTest extends BuildFileTest {
     /**
      * Inline manifest - Invalid since has a Name attribute in the section element
      */
+    @Test
     public void test9() {
-        expectBuildExceptionContaining("test9", "Construction is invalid - Name attribute should not be used",
-                                       "Specify the section name using the \"name\" attribute of the <section> element");
+        try {
+            buildRule.executeTarget("test9");
+            fail("BuildException expected: Construction is invalid - Name attribute should not be used");
+        } catch (BuildException ex) {
+            assertContains("Specify the section name using the \"name\" attribute of the <section> element",
+                           ex.getMessage());
+        }
     }
 
     /**
      * Inline manifest - Invalid attribute without name
      */
+    @Test
     public void test10() {
-        expectBuildExceptionContaining("test10", "Attribute has no name",
-                                       "Attributes must have name and value");
+        try {
+            buildRule.executeTarget("test10");
+            fail("BuildException expected: Attribute has no name");
+        } catch (BuildException ex) {
+            assertContains("Attributes must have name and value", ex.getMessage());
+        }
     }
 
     /**
      * Inline manifest - Invalid attribute without value
      */
+    @Test
     public void test11() {
-        expectBuildExceptionContaining("test11", "Attribute has no value",
-                                       "Attributes must have name and value");
+        try {
+            buildRule.executeTarget("test11");
+            fail("BuildException expected: Attribute has no value");
+        } catch (BuildException ex) {
+            assertContains("Attributes must have name and value", ex.getMessage());
+        }
     }
 
     /**
      * Inline manifest - Invalid attribute without value
      */
+    @Test
     public void test12() {
-        expectBuildExceptionContaining("test12", "Section with no name",
-                                       "Sections must have a name");
+        try {
+            buildRule.executeTarget("test12");
+            fail("BuildException expected: Section with no name");
+        } catch (BuildException ex) {
+            assertContains("Sections must have a name", ex.getMessage());
+        }
     }
 
     /**
      * Inline manifest - Duplicate attribute
      */
+    @Test
     public void test13() {
-        expectBuildExceptionContaining("test13", "Duplicate Attribute",
-                                       "The attribute \"Test\" may not occur more than once in the same section");
+        try {
+            buildRule.executeTarget("test13");
+            fail("BuildException expected: Duplicate Attribute");
+        } catch (BuildException ex) {
+            assertContains("The attribute \"Test\" may not occur more than once in the same section", ex.getMessage());
+        }
     }
 
     /**
      * Inline manifest - OK since classpath entries can be duplicated.
      */
+    @Test
     public void test14() throws IOException, ManifestException {
-        executeTarget("test14");
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        buildRule.executeTarget("test14");
+        Manifest manifest = getManifest(expandedManifest);
         Manifest.Section mainSection = manifest.getMainSection();
         String classpath = mainSection.getAttributeValue("class-path");
         assertEquals("Class-Path attribute was not set correctly - ",
@@ -202,38 +265,44 @@ public class ManifestTest extends BuildFileTest {
     /**
      * Tets long line wrapping
      */
+    @Test
     public void testLongLine() throws IOException, ManifestException {
-        Project p = getProject();
+        Project p = buildRule.getProject();
         p.setUserProperty("test.longline", LONG_LINE);
         p.setUserProperty("test.long68name" , LONG_68_NAME);
         p.setUserProperty("test.long70name" , LONG_70_NAME);
         p.setUserProperty("test.notlongname" , NOT_LONG_NAME);
         p.setUserProperty("test.value", VALUE);
-        executeTarget("testLongLine");
+        buildRule.executeTarget("testLongLine");
 
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        Manifest manifest = getManifest(expandedManifest);
         Manifest.Section mainSection = manifest.getMainSection();
         String classpath = mainSection.getAttributeValue("class-path");
         assertEquals("Class-Path attribute was not set correctly - ",
             LONG_LINE, classpath);
-        
+
         String value = mainSection.getAttributeValue(LONG_68_NAME);
         assertEquals("LONG_68_NAME_VALUE_MISMATCH", VALUE, value);
         value = mainSection.getAttributeValue(LONG_70_NAME);
         assertEquals("LONG_70_NAME_VALUE_MISMATCH", VALUE, value);
         value = mainSection.getAttributeValue(NOT_LONG_NAME);
         assertEquals("NOT_LONG_NAME_VALUE_MISMATCH", VALUE, value);
-        
-        BufferedReader in = new BufferedReader(new FileReader(new File(System.getProperty("root"), EXPANDED_MANIFEST)));
-        
+
         Set set = new HashSet();
-        String read = in.readLine();
-        while (read != null)
-        {
-            set.add(read);
-            read = in.readLine();
+        FileReader fin = new FileReader(expandedManifest);
+        try {
+            BufferedReader in = new BufferedReader(fin);
+
+            String read = in.readLine();
+            while (read != null) {
+                set.add(read);
+                read = in.readLine();
+            }
+            in.close();
+        } finally {
+            fin.close();
         }
-        
+
         assertTrue("Manifest file should have contained string ", set
                 .remove(" NOT_LONG"));
         assertTrue("Manifest file should have contained string ", set
@@ -247,10 +316,11 @@ public class ManifestTest extends BuildFileTest {
     /**
      * Tests ordering of sections
      */
+    @Test
     public void testOrder1() throws IOException, ManifestException {
-        executeTarget("testOrder1");
+        buildRule.executeTarget("testOrder1");
 
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        Manifest manifest = getManifest(expandedManifest);
         Enumeration e = manifest.getSectionNames();
         String section1 = (String)e.nextElement();
         String section2 = (String)e.nextElement();
@@ -270,10 +340,11 @@ public class ManifestTest extends BuildFileTest {
     /**
      * Tests ordering of sections
      */
+    @Test
     public void testOrder2() throws IOException, ManifestException {
-        executeTarget("testOrder2");
+        buildRule.executeTarget("testOrder2");
 
-        Manifest manifest = getManifest(EXPANDED_MANIFEST);
+        Manifest manifest = getManifest(expandedManifest);
         Enumeration e = manifest.getSectionNames();
         String section1 = (String)e.nextElement();
         String section2 = (String)e.nextElement();
@@ -293,16 +364,23 @@ public class ManifestTest extends BuildFileTest {
     /**
      * file attribute for manifest task is required.
      */
+    @Test
     public void testNoFile() {
-        expectBuildException("testNoFile", "file is required");
+        try {
+            buildRule.executeTarget("testNoFile");
+            fail("BuildException expected: file is required");
+        } catch (BuildException ex) {
+            //TODO assert value
+        }
     }
 
     /**
      * replace changes Manifest-Version from 2.0 to 1.0
      */
+    @Test
     public void testReplace() throws IOException, ManifestException {
-        executeTarget("testReplace");
-        Manifest mf = getManifest("src/etc/testcases/taskdefs/mftest.mf");
+        buildRule.executeTarget("testReplace");
+        Manifest mf = getManifest(new File(outDir, "mftest.mf"));
         assertNotNull(mf);
         assertEquals(Manifest.getDefaultManifest(), mf);
     }
@@ -310,9 +388,10 @@ public class ManifestTest extends BuildFileTest {
     /**
      * update keeps the Manifest-Version and adds a new attribute Foo
      */
+    @Test
     public void testUpdate() throws IOException, ManifestException {
-        executeTarget("testUpdate");
-        Manifest mf = getManifest("src/etc/testcases/taskdefs/mftest.mf");
+        buildRule.executeTarget("testUpdate");
+        Manifest mf = getManifest(new File(outDir, "mftest.mf"));
         assertNotNull(mf);
         assertTrue(!Manifest.getDefaultManifest().equals(mf));
         String mfAsString = mf.toString();
@@ -320,7 +399,7 @@ public class ManifestTest extends BuildFileTest {
         assertTrue(mfAsString.startsWith("Manifest-Version: 2.0"));
         assertTrue(mfAsString.indexOf("Foo: Bar") > -1);
 
-        mf = getManifest("src/etc/testcases/taskdefs/mftest2.mf");
+        mf = getManifest(new File(outDir, "mftest2.mf"));
         assertNotNull(mf);
         mfAsString = mf.toString();
         assertNotNull(mfAsString);
@@ -328,35 +407,67 @@ public class ManifestTest extends BuildFileTest {
         assertTrue(mfAsString.indexOf("Foo: Baz") > -1);
     }
 
+    @Test
     public void testFrom() {
-        expectLogContaining("testFrom", Manifest.ERROR_FROM_FORBIDDEN);
+        buildRule.executeTarget("testFrom");
+        assertContains(Manifest.ERROR_FROM_FORBIDDEN, buildRule.getLog());
     }
 
+    @Test
     public void testIllegalName() {
-        expectBuildException("testIllegalName", "Manifest attribute names must not contain ' '");
+        try {
+            buildRule.executeTarget("testIllegalName");
+            fail("BuildException expected: Manifest attribute names must not contain ' '");
+        } catch (BuildException ex) {
+            //TODO assert value
+        }
     }
 
+    @Test
     public void testIllegalNameInSection() {
-        expectBuildException("testIllegalNameInSection", "Manifest attribute names must not contain ' '");
+        try {
+            buildRule.executeTarget("testIllegalNameInSection");
+            fail("BuildException expected: Manifest attribute names must not contain ' '");
+        } catch (BuildException ex) {
+            //TODO assert value
+        }
     }
 
+    @Test
     public void testIllegalNameBegin() {
-        expectBuildException("testIllegalNameInSection", "Manifest attribute names must not start with '-' at the begin.");
+        try {
+            buildRule.executeTarget("testIllegalNameInSection");
+            fail("BuildException expected: Manifest attribute names must not start with '-' at the begin.");
+        } catch (BuildException ex) {
+            //TODO assert value
+        }
     }
 
+    @Test
     public void testIllegalName2() {
-        expectBuildException("testIllegalName", "Manifest attribute names must not contain '.'");
+        try {
+            buildRule.executeTarget("testIllegalName");
+            fail("BuildException expected: Manifest attribute names must not contain '.'");
+        } catch (BuildException ex) {
+            //TODO assert value
+        }
     }
 
+    @Test
     public void testIllegalName3() {
-        expectBuildException("testIllegalName", "Manifest attribute names must not contain '*'");
+        try {
+            buildRule.executeTarget("testIllegalName");
+            fail("BuildException expected: Manifest attribute names must not contain '*'");
+        } catch (BuildException ex) {
+            //TODO assert value
+        }
     }
 
     /**
      * Reads mftest.mf.
      */
-    private Manifest getManifest(String filename) throws IOException, ManifestException {
-        FileReader r = new FileReader(new File(System.getProperty("root"), filename));
+    private Manifest getManifest(File file) throws IOException, ManifestException {
+        FileReader r = new FileReader(file);
         try {
             return new Manifest(r);
         } finally {

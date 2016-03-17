@@ -23,20 +23,24 @@ package org.apache.tools.ant.util;
  * @since Ant 1.8.3
  */
 public class UnicodeUtil {
-	/**
-	 * returns the unicode representation of a char without the leading backslash
-	 * @param ch
-	 * @return unicode representation of a char for property files
-	 */
-   public static StringBuffer EscapeUnicode(char ch) {
-       StringBuffer unicodeBuf = new StringBuffer("u0000");
-       String s = Integer.toHexString(ch);
-       //replace the last 0s by the chars contained in s
-       for (int i = 0; i < s.length(); i++) {
-           unicodeBuf.setCharAt(unicodeBuf.length()
-                                - s.length() + i,
-                                s.charAt(i));
-       }
-       return unicodeBuf;	   
-   }
+
+    private UnicodeUtil() {
+    }
+
+    /**
+     * returns the unicode representation of a char without the leading backslash
+     * @param ch
+     * @return unicode representation of a char for property files
+     */
+    public static StringBuffer EscapeUnicode(char ch) {
+        StringBuffer unicodeBuf = new StringBuffer("u0000");
+        String s = Integer.toHexString(ch);
+        //replace the last 0s by the chars contained in s
+        for (int i = 0; i < s.length(); i++) {
+            unicodeBuf.setCharAt(unicodeBuf.length()
+                                 - s.length() + i,
+                                 s.charAt(i));
+        }
+        return unicodeBuf;
+    }
 }

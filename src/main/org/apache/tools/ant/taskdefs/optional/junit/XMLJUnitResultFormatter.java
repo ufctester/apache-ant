@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -35,14 +34,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.JUnit4TestCaseFacade;
 import junit.framework.Test;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.util.DOMElementWriter;
 import org.apache.tools.ant.util.DateUtils;
 import org.apache.tools.ant.util.FileUtils;
-import org.junit.Ignore;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
@@ -64,7 +61,7 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
     private static DocumentBuilder getDocumentBuilder() {
         try {
             return DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        } catch (Exception exc) {
+        } catch (final Exception exc) {
             throw new ExceptionInInitializerError(exc);
         }
     }
@@ -73,35 +70,39 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * The XML document.
      */
     private Document doc;
+
     /**
      * The wrapper for the whole testsuite.
      */
     private Element rootElement;
+
     /**
      * Element for the current test.
-     * 
+     *
      * The keying of this map is a bit of a hack: tests are keyed by caseName(className) since
      * the Test we get for Test-start isn't the same as the Test we get during test-assumption-fail,
      * so we can't easily match Test objects without manually iterating over all keys and checking
      * individual fields.
      */
-    private Hashtable<String, Element> testElements = new Hashtable<String, Element>();
+    private final Hashtable<String, Element> testElements = new Hashtable<String, Element>();
+
     /**
      * tests that failed.
      */
-    private Hashtable failedTests = new Hashtable();
+    private final Hashtable failedTests = new Hashtable();
+
     /**
      * Tests that were skipped.
      */
-    private Hashtable<String, Test> skippedTests = new Hashtable<String, Test>();
+    private final Hashtable<String, Test> skippedTests = new Hashtable<String, Test>();
     /**
      * Tests that were ignored. See the note above about the key being a bit of a hack.
      */
-    private Hashtable<String, Test> ignoredTests = new Hashtable<String, Test>();
+    private final Hashtable<String, Test> ignoredTests = new Hashtable<String, Test>();
     /**
      * Timing helper.
      */
-    private Hashtable<String, Long> testStarts = new Hashtable<String, Long>();
+    private final Hashtable<String, Long> testStarts = new Hashtable<String, Long>();
     /**
      * Where to write the log to.
      */
@@ -112,17 +113,17 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
     }
 
     /** {@inheritDoc}. */
-    public void setOutput(OutputStream out) {
+    public void setOutput(final OutputStream out) {
         this.out = out;
     }
 
     /** {@inheritDoc}. */
-    public void setSystemOutput(String out) {
+    public void setSystemOutput(final String out) {
         formatOutput(SYSTEM_OUT, out);
     }
 
     /** {@inheritDoc}. */
-    public void setSystemError(String out) {
+    public void setSystemError(final String out) {
         formatOutput(SYSTEM_ERR, out);
     }
 
@@ -130,10 +131,10 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * The whole testsuite started.
      * @param suite the testsuite.
      */
-    public void startTestSuite(JUnitTest suite) {
+    public void startTestSuite(final JUnitTest suite) {
         doc = getDocumentBuilder().newDocument();
         rootElement = doc.createElement(TESTSUITE);
-        String n = suite.getName();
+        final String n = suite.getName();
         rootElement.setAttribute(ATTR_NAME, n == null ? UNKNOWN : n);
 
         //add the timestamp
@@ -144,14 +145,14 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
         rootElement.setAttribute(HOSTNAME, getHostname());
 
         // Output properties
-        Element propsElement = doc.createElement(PROPERTIES);
+        final Element propsElement = doc.createElement(PROPERTIES);
         rootElement.appendChild(propsElement);
-        Properties props = suite.getProperties();
+        final Properties props = suite.getProperties();
         if (props != null) {
-            Enumeration e = props.propertyNames();
+            final Enumeration e = props.propertyNames();
             while (e.hasMoreElements()) {
-                String name = (String) e.nextElement();
-                Element propElement = doc.createElement(PROPERTY);
+                final String name = (String) e.nextElement();
+                final Element propElement = doc.createElement(PROPERTY);
                 propElement.setAttribute(ATTR_NAME, name);
                 propElement.setAttribute(ATTR_VALUE, props.getProperty(name));
                 propsElement.appendChild(propElement);
@@ -164,11 +165,16 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * @return the name of the local host, or "localhost" if we cannot work it out
      */
     private String getHostname()  {
+        String hostname = "localhost";
         try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            return "localhost";
+            final InetAddress localHost = InetAddress.getLocalHost();
+            if (localHost != null) {
+                hostname = localHost.getHostName();
+            }
+        } catch (final UnknownHostException e) {
+            // fall back to default 'localhost'
         }
+        return hostname;
     }
 
     /**
@@ -176,7 +182,7 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * @param suite the testsuite.
      * @throws BuildException on error.
      */
-    public void endTestSuite(JUnitTest suite) throws BuildException {
+    public void endTestSuite(final JUnitTest suite) throws BuildException {
         rootElement.setAttribute(ATTR_TESTS, "" + suite.runCount());
         rootElement.setAttribute(ATTR_FAILURES, "" + suite.failureCount());
         rootElement.setAttribute(ATTR_ERRORS, "" + suite.errorCount());
@@ -189,13 +195,13 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
                 wri = new BufferedWriter(new OutputStreamWriter(out, "UTF8"));
                 wri.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
                 (new DOMElementWriter()).write(rootElement, wri, 0, "  ");
-            } catch (IOException exc) {
+            } catch (final IOException exc) {
                 throw new BuildException("Unable to write log file", exc);
             } finally {
                 if (wri != null) {
                     try {
                         wri.flush();
-                    } catch (IOException ex) {
+                    } catch (final IOException ex) {
                         // ignore
                     }
                 }
@@ -212,13 +218,13 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * <p>A new Test is started.
      * @param t the test.
      */
-    public void startTest(Test t) {
+    public void startTest(final Test t) {
         testStarts.put(createDescription(t), System.currentTimeMillis());
     }
 
-    private static String createDescription(Test test) throws BuildException {
+    private static String createDescription(final Test test) throws BuildException {
         return JUnitVersionHelper.getTestCaseName(test) + "(" + JUnitVersionHelper.getTestCaseClassName(test) + ")";
-	}
+    }
 
     /**
      * Interface TestListener.
@@ -226,8 +232,8 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * <p>A Test is finished.
      * @param test the test.
      */
-    public void endTest(Test test) {
-        String testDescription = createDescription(test);
+    public void endTest(final Test test) {
+        final String testDescription = createDescription(test);
 
         // Fix for bug #5637 - if a junit.extensions.TestSetup is
         // used and throws an exception during setUp then startTest
@@ -238,7 +244,7 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
         Element currentTest;
         if (!failedTests.containsKey(test) && !skippedTests.containsKey(testDescription) && !ignoredTests.containsKey(testDescription)) {
             currentTest = doc.createElement(TESTCASE);
-            String n = JUnitVersionHelper.getTestCaseName(test);
+            final String n = JUnitVersionHelper.getTestCaseName(test);
             currentTest.setAttribute(ATTR_NAME,
                                      n == null ? UNKNOWN : n);
             // a TestSuite can contain Tests from multiple classes,
@@ -251,7 +257,7 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
             currentTest = testElements.get(testDescription);
         }
 
-        Long l = testStarts.get(createDescription(test));
+        final Long l = testStarts.get(createDescription(test));
         currentTest.setAttribute(ATTR_TIME,
             "" + ((System.currentTimeMillis() - l) / ONE_SECOND));
     }
@@ -263,7 +269,7 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * @param test the test.
      * @param t the exception.
      */
-    public void addFailure(Test test, Throwable t) {
+    public void addFailure(final Test test, final Throwable t) {
         formatError(FAILURE, test, t);
     }
 
@@ -274,7 +280,7 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * @param test the test.
      * @param t the assertion.
      */
-    public void addFailure(Test test, AssertionFailedError t) {
+    public void addFailure(final Test test, final AssertionFailedError t) {
         addFailure(test, (Throwable) t);
     }
 
@@ -285,17 +291,17 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
      * @param test the test.
      * @param t the error.
      */
-    public void addError(Test test, Throwable t) {
+    public void addError(final Test test, final Throwable t) {
         formatError(ERROR, test, t);
     }
 
-    private void formatError(String type, Test test, Throwable t) {
+    private void formatError(final String type, final Test test, final Throwable t) {
         if (test != null) {
             endTest(test);
             failedTests.put(test, test);
         }
 
-        Element nested = doc.createElement(type);
+        final Element nested = doc.createElement(type);
         Element currentTest;
         if (test != null) {
             currentTest = testElements.get(createDescription(test));
@@ -305,58 +311,37 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
 
         currentTest.appendChild(nested);
 
-        String message = t.getMessage();
+        final String message = t.getMessage();
         if (message != null && message.length() > 0) {
             nested.setAttribute(ATTR_MESSAGE, t.getMessage());
         }
         nested.setAttribute(ATTR_TYPE, t.getClass().getName());
 
-        String strace = JUnitTestRunner.getFilteredTrace(t);
-        Text trace = doc.createTextNode(strace);
+        final String strace = JUnitTestRunner.getFilteredTrace(t);
+        final Text trace = doc.createTextNode(strace);
         nested.appendChild(trace);
     }
 
-    private void formatOutput(String type, String output) {
-        Element nested = doc.createElement(type);
+    private void formatOutput(final String type, final String output) {
+        final Element nested = doc.createElement(type);
         rootElement.appendChild(nested);
         nested.appendChild(doc.createCDATASection(output));
     }
 
-    public void testIgnored(Test test) {
-        String message = null;
-        if (test != null && test instanceof JUnit4TestCaseFacade) {
-        	//try and get the message coded as part of the ignore
-        	/*
-        	 * org.junit.runner.Description contains a getAnnotation(Class) method... but this
-        	 * wasn't in older versions of JUnit4 so we have to try and do this by reflection
-        	 */
-        	try {
-        		Class<?> testClass = Class.forName(JUnitVersionHelper.getTestCaseClassName(test));
-        	
-                Method testMethod = testClass.getMethod(JUnitVersionHelper.getTestCaseName(test));
-                Ignore annotation = testMethod.getAnnotation(Ignore.class);
-                if (annotation != null && annotation.value().length() > 0) {
-                    message = annotation.value();
-                }
-        	} catch (NoSuchMethodException e) {
-				// silently ignore - we'll report a skip with no message
-			} catch (ClassNotFoundException e) {
-				// silently ignore - we'll report a skip with no message
-			}
-        }
-        formatSkip(test, message);
+    public void testIgnored(final Test test) {
+        formatSkip(test, JUnitVersionHelper.getIgnoreMessage(test));
         if (test != null) {
             ignoredTests.put(createDescription(test), test);
         }
     }
 
 
-    public void formatSkip(Test test, String message) {
+    public void formatSkip(final Test test, final String message) {
         if (test != null) {
             endTest(test);
         }
 
-        Element nested = doc.createElement("skipped");
+        final Element nested = doc.createElement("skipped");
 
         if (message != null) {
             nested.setAttribute("message", message);
@@ -373,9 +358,8 @@ public class XMLJUnitResultFormatter implements JUnitResultFormatter, XMLConstan
 
     }
 
-    public void testAssumptionFailure(Test test, Throwable failure) {
-        String message = failure.getMessage();
-        formatSkip(test, message);
+    public void testAssumptionFailure(final Test test, final Throwable failure) {
+        formatSkip(test, failure.getMessage());
         skippedTests.put(createDescription(test), test);
 
     }

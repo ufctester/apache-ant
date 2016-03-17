@@ -21,16 +21,16 @@ package org.apache.tools.ant.types;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
-import java.util.Hashtable;
-import java.util.Properties;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -224,7 +224,7 @@ public class PropertySet extends DataType implements ResourceCollection {
     }
 
     /**
-     * Set whether to reevaluate the set everytime the set is used.
+     * Set whether to reevaluate the set every time the set is used.
      * Default is true.
      *
      * @param dynamic if true, reevaluate the property set each time

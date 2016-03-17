@@ -18,27 +18,29 @@
 
 package org.apache.tools.ant.taskdefs.optional.junit;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.security.Permission;
-import junit.framework.TestCase;
+
+import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Delete;
 import org.apache.tools.ant.types.FileSet;
+import org.junit.Assume;
+import org.junit.Test;
 
-public class XMLResultAggregatorTest extends TestCase {
+public class XMLResultAggregatorTest {
 
-    public XMLResultAggregatorTest(String name) {
-        super(name);
-    }
-
+	@Test
     public void testFrames() throws Exception {
         // For now, skip this test on JDK 6 (and below); see below for why:
         try {
             Class.forName("java.nio.file.Files");
         } catch (ClassNotFoundException x) {
-            return;
+            Assume.assumeNoException("Skip test on JDK 6 and below", x);
         }
         final File d = new File(System.getProperty("java.io.tmpdir"), "XMLResultAggregatorTest");
         if (d.exists()) {
@@ -57,14 +59,19 @@ public class XMLResultAggregatorTest extends TestCase {
         }
         XMLResultAggregator task = new XMLResultAggregator();
         task.setTodir(d);
+        Project project = new Project();
+        DefaultLogger logger = new DefaultLogger();
+        logger.setOutputPrintStream(System.out);
+        logger.setErrorPrintStream(System.err);
+        logger.setMessageOutputLevel(Project.MSG_INFO);
+        project.addBuildListener(logger);
+        project.init();
+        task.setProject(project);
         AggregateTransformer report = task.createReport();
         report.setTodir(d);
         FileSet fs = new FileSet();
         fs.setFile(xml);
         task.addFileSet(fs);
-        Project project = new Project();
-        project.init();
-        task.setProject(project);
         /* getResourceAsStream override unnecessary on JDK 7. Ought to work around JAXP #6723276 in JDK 6, but causes a TypeCheckError in FunctionCall for reasons TBD:
         Thread.currentThread().setContextClassLoader(new ClassLoader(ClassLoader.getSystemClassLoader().getParent()) {
             public InputStream getResourceAsStream(String name) {

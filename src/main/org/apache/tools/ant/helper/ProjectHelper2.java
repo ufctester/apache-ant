@@ -17,6 +17,19 @@
  */
 package org.apache.tools.ant.helper;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Stack;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.ExtensionPoint;
 import org.apache.tools.ant.Location;
@@ -40,18 +53,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Stack;
 
 /**
  * Sax2 based project reader
@@ -257,7 +258,9 @@ public class ProjectHelper2 extends ProjectHelper {
                     inputStream =
                         zf.getInputStream(zf.getEntry(uri.substring(pling + 1)));
                 } else {
-                    inputStream = url.openStream();
+                    URLConnection conn = url.openConnection();
+                    conn.setUseCaches(false);
+                    inputStream = conn.getInputStream();
                 }
             }
 
@@ -699,7 +702,7 @@ public class ProjectHelper2 extends ProjectHelper {
             // Set the location of the implicit target associated with the project tag
             context.getImplicitTarget().setLocation(new Location(context.getLocator()));
 
-            /** XXX I really don't like this - the XML processor is still
+            /** TODO I really don't like this - the XML processor is still
              * too 'involved' in the processing. A better solution (IMO)
              * would be to create UE for Project and Target too, and
              * then process the tree and have Project/Target deal with
@@ -732,12 +735,10 @@ public class ProjectHelper2 extends ProjectHelper {
                             project.setName(value);
                             project.addReference(value, project);
                         } else if (isInIncludeMode()) {
-                            if (!"".equals(value)
-                                && (getCurrentTargetPrefix() == null
-                                    || getCurrentTargetPrefix().length() == 0)
-                                ) {
+                            if (!"".equals(value) && getCurrentTargetPrefix()!= null && getCurrentTargetPrefix().endsWith(ProjectHelper.USE_PROJECT_NAME_AS_TARGET_PREFIX))  {
+                                String newTargetPrefix = getCurrentTargetPrefix().replace(ProjectHelper.USE_PROJECT_NAME_AS_TARGET_PREFIX, value);
                                 // help nested include tasks
-                                setCurrentTargetPrefix(value);
+                                setCurrentTargetPrefix(newTargetPrefix);
                             }
                         }
                     }
@@ -753,13 +754,13 @@ public class ProjectHelper2 extends ProjectHelper {
                         baseDir = value;
                     }
                 } else {
-                    // XXX ignore attributes in a different NS ( maybe store them ? )
+                    // TODO ignore attributes in a different NS ( maybe store them ? )
                     throw new SAXParseException("Unexpected attribute \"" + attrs.getQName(i)
                                                 + "\"", context.getLocator());
                 }
             }
 
-            // XXX Move to Project ( so it is shared by all helpers )
+            // TODO Move to Project ( so it is shared by all helpers )
             String antFileProp =
                 MagicNames.ANT_FILE + "." + context.getCurrentProjectName();
             String dup = project.getProperty(antFileProp);

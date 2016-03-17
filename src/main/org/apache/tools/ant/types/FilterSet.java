@@ -21,11 +21,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Vector;
 
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.util.FileUtils;
 import org.apache.tools.ant.util.VectorSet;
 
@@ -162,6 +164,7 @@ public class FilterSet extends DataType implements Cloneable {
 
         //inherit doc
         /** {@inheritDoc}. */
+        @Override
         public String[] getValues() {
             return VALUES;
         }
@@ -227,7 +230,7 @@ public class FilterSet extends DataType implements Cloneable {
             readingFiles = true;
             final int size = filtersFiles.size();
             for (int i = 0; i < size; i++) {
-                readFiltersFromFile((File) filtersFiles.get(i));
+                readFiltersFromFile(filtersFiles.get(i));
             }
             filtersFiles.clear();
             readingFiles = false;
@@ -241,7 +244,7 @@ public class FilterSet extends DataType implements Cloneable {
      * @return the filterset from the reference.
      */
     protected FilterSet getRef() {
-        return (FilterSet) getCheckedRef(FilterSet.class, "filterset");
+        return getCheckedRef(FilterSet.class, "filterset");
     }
 
     /**
@@ -458,10 +461,27 @@ public class FilterSet extends DataType implements Cloneable {
     }
 
     /**
-    * Test to see if this filter set has filters.
-    *
-    * @return Return true if there are filters in this set.
-    */
+     * Adds the properties provided by the specified PropertySet to this filterset.
+     *
+     * @param propertySet the propertyset to be added to this propertyset
+     */
+    public synchronized void addConfiguredPropertySet(PropertySet propertySet) {
+        if (isReference()) {
+            throw noChildrenAllowed();
+        }
+        Properties p = propertySet.getProperties();
+        Set<Map.Entry<Object,Object>> entries = p.entrySet();
+        for (Map.Entry<Object, Object> entry : entries) {
+            addFilter(new Filter(String.valueOf(entry.getKey()),
+                                 String.valueOf(entry.getValue())));
+        }
+    }
+
+    /**
+     * Test to see if this filter set has filters.
+     *
+     * @return Return true if there are filters in this set.
+     */
     public synchronized boolean hasFilters() {
         return getFilters().size() > 0;
     }
@@ -473,9 +493,10 @@ public class FilterSet extends DataType implements Cloneable {
      *
      * @throws BuildException if the clone cannot be performed.
      */
+    @Override
     public synchronized Object clone() throws BuildException {
         if (isReference()) {
-            return ((FilterSet) getRef()).clone();
+            return getRef().clone();
         }
         try {
             FilterSet fs = (FilterSet) super.clone();
@@ -602,7 +623,7 @@ public class FilterSet extends DataType implements Cloneable {
         } else if (duplicateToken) {
             // should always be the case...
             if (passedTokens.size() > 0) {
-                value = (String) passedTokens.remove(passedTokens.size() - 1);
+                value = passedTokens.remove(passedTokens.size() - 1);
                 if (passedTokens.size() == 0) {
                     value = beginToken + value + endToken;
                     duplicateToken = false;
